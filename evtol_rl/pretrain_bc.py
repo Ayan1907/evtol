@@ -41,14 +41,23 @@ def make_env(cfg: EnvConfig):
 
 
 def heuristic(env, cruise_alt, descend_at):
+    """带感知的合法航线专家：先保证在允许带内（硬合规），再考虑爬升/下降/前进。"""
     up = int(np.where((env._DIRS == np.array([0, 0, 1])).all(axis=1))[0][0])
     down = int(np.where((env._DIRS == np.array([0, 0, -1])).all(axis=1))[0][0])
-    hd = float(np.hypot(env.goal[0] - env.pos[0], env.goal[1] - env.pos[1]))
+    lo, hi = env.allowed_height_range(env.pos)
     z = env.pos[2]
+    hd = float(np.hypot(env.goal[0] - env.pos[0], env.goal[1] - env.pos[1]))
+    # 1) 带感知（优先级最高）：低于带下限+5m 爬升，贴上限−5m 下降
+    if z < lo + 5.0:
+        return up
+    if z > hi - 5.0:
+        return down
+    # 2) 任务逻辑：爬升到巡航高度 / 进近下降
     if z < cruise_alt and hd > descend_at:
         return up
     if hd < descend_at and z > cruise_alt - 25:
         return down
+    # 3) 前进
     d = np.array([env.goal[0] - env.pos[0], env.goal[1] - env.pos[1], 0.0])
     return int(np.argmax(env._DIRS_UNIT @ (d / (np.linalg.norm(d) + 1e-9))))
 
@@ -72,7 +81,7 @@ def main():
     obs_list, act_list = [], []
     outcomes = {}
     for ep in range(args.episodes):
-        cruise_alt = float(rng.choice([130.0, 155.0]))
+        cruise_alt = float(rng.choice([155.0]))
         descend_at = float(rng.choice([450.0, 350.0]))
         obs, _ = env.reset(seed=ep)
         while True:

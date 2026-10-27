@@ -115,6 +115,8 @@ def main():
     ap.add_argument("--height-hard-limit", type=float, default=None, help="高度硬终止阈值 m（inf=关闭硬终止，仅软罚）")
     ap.add_argument("--start-altitude", type=float, default=None, help="课程学习：起点高度覆盖")
     ap.add_argument("--no-shield", action="store_true", help="关闭动作屏蔽（碰撞即终止）")
+    ap.add_argument("--lr", type=float, default=None, help="学习率（覆盖 config，微调用 5e-5）")
+    ap.add_argument("--ckpt-prefix", default="ppo_evtol", help="checkpoint 文件名前缀")
     ap.add_argument("--stride", type=float, default=None, help="分辨率课程：每步位移 m")
     ap.add_argument("--max-steps", type=int, default=None, help="分辨率课程：episode 步数上限")
     ap.add_argument("--init-model", default=None, help="从已有模型继续训练")
@@ -154,6 +156,8 @@ def main():
         env_cfg.stride = args.stride
     if args.max_steps is not None:
         env_cfg.max_steps = args.max_steps
+    if args.lr is not None:
+        train_cfg.learning_rate = args.lr
 
     print("=" * 62)
     print("PPO 训练 eVTOL 航迹决策策略")
@@ -200,7 +204,7 @@ def main():
 
     ckpt = CheckpointCallback(
         save_freq=50_000, save_path=os.path.join(_HERE, "checkpoints"),
-        name_prefix="ppo_evtol",
+        name_prefix=args.ckpt_prefix,
     )
     model.learn(total_timesteps=train_cfg.total_timesteps, callback=ckpt,
                 progress_bar=False)

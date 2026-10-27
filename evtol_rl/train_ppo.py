@@ -144,6 +144,14 @@ def main():
 
     env = Monitor(make_env(env_cfg, seed=train_cfg.seed)())
 
+    # tensorboard 可选：未安装则退化为无 TB 日志（不阻塞训练）
+    try:
+        import tensorboard  # noqa: F401
+        tb_dir = train_cfg.log_dir
+    except ImportError:
+        tb_dir = None
+        print("（未安装 tensorboard，跳过 TB 日志；训练曲线用 checkpoint 评估替代）")
+
     model = PPO(
         "MlpPolicy",
         env,
@@ -154,7 +162,7 @@ def main():
         gae_lambda=train_cfg.gae_lambda,
         ent_coef=train_cfg.ent_coef,
         verbose=1,
-        tensorboard_log=train_cfg.log_dir,
+        tensorboard_log=tb_dir,
         seed=train_cfg.seed,
     )
 

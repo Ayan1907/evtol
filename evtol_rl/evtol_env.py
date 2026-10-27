@@ -513,7 +513,11 @@ class EVTOLEnv(gym.Env):
         #     GroundRiskModel.calculate_ground_risk(node_s, node_s')
 
         # ---------------- 空间 ----------------
+        # 观测 = 4 基础维 + 2 剖面维（FlightProfile 启用时，[4][5]=min_h/max_h）+ K×K 局部高度图
+        # （修复：此前固定 4+K²，剖面启用时 obs 实为 70 维而空间声明 68 维，SB3 首跑即炸）
         obs_dim = 4 + self.obs_patch * self.obs_patch
+        if self.flight_profile is not None:
+            obs_dim += 2
         if HAS_GYMNASIUM:
             self.action_space = spaces.Discrete(self.N_ACTIONS)
             self.observation_space = spaces.Box(

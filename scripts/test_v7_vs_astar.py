@@ -15,7 +15,9 @@ import math
 import heapq
 import numpy as np
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _ROOT)
+os.chdir(_ROOT)  # 确保 data/ 等相对路径基于项目根解析
 
 from evtol_v7.evtol_path_planning_v7 import EVTOLV7, FlightProfile
 from evtol_path_planning_v3_clean import load_environment_from_json
@@ -258,7 +260,7 @@ def main():
     
     # 加载地图
     print("\n[1/3] 加载测试环境...")
-    env, start_coords, goal_coords, metadata = load_environment_from_json('test_map_v3_compatible.json')
+    env, start_coords, goal_coords, metadata = load_environment_from_json('data/test_maps/test_map_v3_compatible.json')
     
     print(f"  起点: ({start_coords[0]:.0f}, {start_coords[1]:.0f}, {start_coords[2]:.0f})")
     print(f"  终点: ({goal_coords[0]:.0f}, {goal_coords[1]:.0f}, {goal_coords[2]:.0f})")
@@ -497,10 +499,10 @@ def main():
         }
     }
     
-    os.makedirs('evtol_v7_results', exist_ok=True)
-    with open('evtol_v7_results/v7_vs_astar_comparison.json', 'w', encoding='utf-8') as f:
+    os.makedirs('results/v7', exist_ok=True)
+    with open('results/v7/v7_vs_astar_comparison.json', 'w', encoding='utf-8') as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
-    print(f"\n  ✓ 结果已保存: evtol_v7_results/v7_vs_astar_comparison.json")
+    print(f"\n  ✓ 结果已保存: results/v7/v7_vs_astar_comparison.json")
     
     print("\n" + "="*70)
 

@@ -69,7 +69,7 @@ def fmt(tag: str, info, total_r, n_viol, energy):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--map", default="map_dense.json")
+    ap.add_argument("--map", default="data/maps/map_dense.json")
     ap.add_argument("--alts", default="130,155,180")
     ap.add_argument("--seeds", type=int, default=3)
     args = ap.parse_args()

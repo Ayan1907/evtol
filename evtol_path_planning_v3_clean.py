@@ -530,7 +530,7 @@ def main():
 
     # 检查是否使用保存的地图
     USE_SAVED_MAP = False
-    SAVED_MAP_FILE = '/home/ayan1907/evtol/test_map_v3_compatible.json'
+    SAVED_MAP_FILE = '/home/ayan1907/evtol/data/test_maps/test_map_v3_compatible.json'
 
     if USE_SAVED_MAP:
         # 从JSON加载地图

@@ -44,9 +44,10 @@ from monte_carlo_uncertainty_analysis import (
     UncertaintySource
 )
 
-# 导入多目标优化（V7增强版）
+# 导入多目标优化
 from multi_objective_optimizer import (
     NSGAIIOptimizer,
+    MOEADOptimizer,
     ParetoDecisionMaker,
     Objective,
     ObjectiveType,
@@ -120,12 +121,12 @@ class FlightProfile:
 
 
 # =============================================================================
-# 航迹评估器 - V7增强版（支持目标归一化）
+# 航迹评估器
 # =============================================================================
 
 class PathEvaluator:
     """
-    多目标航迹评估器 - V7增强版（支持风场时空相关性）
+    多目标航迹评估器
     
     评估指标:
     1. energy: 能耗 (kWh)
@@ -563,73 +564,107 @@ class MultiObjectiveOptimizerV7:
                 self.planner.weights[key] = value
     
     def optimize(self, n_generations: int = 50, population_size: int = 30,
-                 enable_adaptive: bool = True) -> ParetoFront:
+                 enable_adaptive: bool = True,
+                 algorithm: str = 'nsga2') -> ParetoFront:
         """
-        运行多目标优化 - V7增强版
-        
+        运行多目标优化 - V7增强版（智能优化算法可切换）
+
         V7参数:
-            enable_adaptive: 启用自适应停滞检测
-        
+            enable_adaptive: 启用自适应停滞检测（仅 NSGA-II 使用）
+            algorithm: 'nsga2'（进化，Deb 2002）| 'moead'（分解，Zhang & Li 2007）
+                       两种智能优化算法共用同一问题实例/评估函数/评价预算，
+                       结果可直接对比（HV 统一尺子见 test_optimizer_compare.py）
+
         返回:
             帕累托前沿
         """
-        print(f"\n  【V7】开始多目标优化 (代数={n_generations}, 种群={population_size})...")
-        
-        # 生成初始路径（多样性策略）
+        algorithm = algorithm.lower()
+        print(f"\n  【V7】开始多目标优化 (算法={algorithm}, 代数={n_generations}, 种群={population_size})...")
+
+        # 生成初始路径（多样性策略，两种算法共用同一批）
         print("  [V7] 生成初始种群...")
         initial_paths = self._generate_initial_paths(n_paths=5)
-        
-        # 创建NSGA-II优化器，使用diverse初始化策略
-        optimizer = NSGAIIOptimizer(
-            n_objectives=5,
-            population_size=population_size,
-            n_generations=n_generations,
-            random_seed=42,
-            n_keypoints=10
-        )
-        optimizer.set_objectives(self.objectives)
-        optimizer.set_environment({
+
+        env_info = {
             'start': self.start_pos,
             'goal': self.goal_pos,
             'bounds': ((0, 2500), (0, 2500), (30, 300))
-        })
-        optimizer.set_initialization_strategy('diverse')
-        
-        # V7新增: 设置固定参考点（确保HV可比较）
-        if self.fixed_reference_point is not None:
-            optimizer.set_fixed_reference_point(self.fixed_reference_point)
-            print(f"  [V7] 已设置固定参考点: {self.fixed_reference_point}")
-        
-        # V7新增: 启用自适应停滞检测
-        if enable_adaptive:
-            optimizer.stagnation_threshold = 5
-            optimizer.hv_improvement_min = 1e-3
-            optimizer.adaptive_reset_ratio = 0.2
-            print(f"  [V7] 自适应停滞检测已启用 (阈值={optimizer.stagnation_threshold}代)")
-        
-        # 传入初始路径
-        if initial_paths:
-            optimizer.set_initial_paths(initial_paths)
-        
-        # 评估函数 - 接收genes，解码为path后评估
+        }
+
+        # 评估函数 - 接收genes，解码为path后评估（两种算法完全同一把尺子）
         def eval_func(genes):
             path = self._genes_to_path(genes)
             return self.evaluator.evaluate(path)
-        
-        # 运行优化
+
         start_time = time.time()
-        result = optimizer.optimize(eval_func)
+
+        if algorithm == 'moead':
+            # ---- MOEA/D：基于分解的多目标进化算法 ----
+            moead = MOEADOptimizer(
+                n_objectives=5,
+                population_size=population_size,
+                n_generations=n_generations,
+                random_seed=42
+            )
+            moead.set_objectives(self.objectives)
+            moead.set_environment(env_info)
+
+            # 初始种群：借 NSGA-II 的 _path_to_genes 编码（保证基因表示一致）
+            encoder = NSGAIIOptimizer(n_objectives=5, n_keypoints=10)
+            initial_population = []
+            for p in (initial_paths or [])[:2]:
+                initial_population.append(Individual(genes=encoder._path_to_genes(p)))
+            print(f"  [MOEA/D] 初始种群注入 {len(initial_population)} 条规划器路径，其余随机")
+
+            result = moead.optimize(eval_func, initial_population=initial_population)
+            # 注意：MOEA/D 实现内部无固定参考点，其自报 HV 不可直接与 NSGA-II 对比，
+            # 对比请用 test_optimizer_compare.py 的统一参考点 HV。
+
+        elif algorithm == 'nsga2':
+            # ---- NSGA-II（V7 增强版：固定参考点 + 自适应停滞检测）----
+            optimizer = NSGAIIOptimizer(
+                n_objectives=5,
+                population_size=population_size,
+                n_generations=n_generations,
+                random_seed=42,
+                n_keypoints=10
+            )
+            optimizer.set_objectives(self.objectives)
+            optimizer.set_environment(env_info)
+            optimizer.set_initialization_strategy('diverse')
+
+            # V7: 设置固定参考点（确保HV可比较）
+            if self.fixed_reference_point is not None:
+                optimizer.set_fixed_reference_point(self.fixed_reference_point)
+                print(f"  [V7] 已设置固定参考点: {self.fixed_reference_point}")
+
+            # V7: 启用自适应停滞检测
+            if enable_adaptive:
+                optimizer.stagnation_threshold = 5
+                optimizer.hv_improvement_min = 1e-3
+                optimizer.adaptive_reset_ratio = 0.2
+                print(f"  [V7] 自适应停滞检测已启用 (阈值={optimizer.stagnation_threshold}代)")
+
+            # 传入初始路径
+            if initial_paths:
+                optimizer.set_initial_paths(initial_paths)
+
+            result = optimizer.optimize(eval_func)
+            # 保存参考点供后续使用
+            self.fixed_reference_point = optimizer.fixed_reference_point
+
+        else:
+            raise ValueError(f"未知算法: {algorithm}（支持 nsga2 / moead）")
+
         opt_time = time.time() - start_time
-        
-        # V7新增: 输出增强信息
-        print(f"\n  【V7】优化完成! 用时: {opt_time:.2f}s")
+
+        # 输出增强信息
+        print(f"\n  【V7】优化完成! 算法={algorithm} 用时: {opt_time:.2f}s")
         print(f"  【V7】帕累托解数量: {len(result.pareto_front.individuals)}")
         print(f"  【V7】超体积(HV): {result.pareto_front.hypervolume:.2f}")
-        print(f"  【V7】固定参考点: {optimizer.fixed_reference_point}")
-        
-        # 保存参考点供后续使用
-        self.fixed_reference_point = optimizer.fixed_reference_point
-        
+        if algorithm == 'nsga2':
+            print(f"  【V7】固定参考点: {self.fixed_reference_point}")
+
         return result.pareto_front
     
     def select_best(self, pareto_front: ParetoFront, method: str = 'topsis') -> Individual:
@@ -789,7 +824,8 @@ class EVTOLV7:
     
     def optimize_multi_objective(self, n_generations: int = 50, 
                                  population_size: int = 30,
-                                 enable_adaptive: bool = True) -> ParetoFront:
+                                 enable_adaptive: bool = True,
+                                 algorithm: str = 'nsga2') -> ParetoFront:
         """
         多目标优化 - V7增强版
         
@@ -799,7 +835,8 @@ class EVTOLV7:
         optimizer = MultiObjectiveOptimizerV7(self, self.evaluator)
         return optimizer.optimize(n_generations=n_generations, 
                                   population_size=population_size,
-                                  enable_adaptive=enable_adaptive)
+                                  enable_adaptive=enable_adaptive,
+                                  algorithm=algorithm)
     
     def select_best_solution(self, pareto_front: ParetoFront, 
                             method: str = 'topsis') -> Individual:

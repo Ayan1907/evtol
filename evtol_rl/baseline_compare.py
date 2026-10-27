@@ -80,7 +80,7 @@ def rollout_rl(map_file: str, model_path: str, seed: int = 0):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--map", default="map_standard.json")
+    ap.add_argument("--map", default="data/maps/map_standard.json")
     ap.add_argument("--model", default="ppo_evtol.zip")
     ap.add_argument("--timing", action="store_true",
                     help="顺便测 RL 策略的单次推理耗时（对应在线重规划这个卖点）")

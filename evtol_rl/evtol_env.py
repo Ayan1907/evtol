@@ -384,7 +384,7 @@ class EVTOLEnv(gym.Env):
 
     def __init__(
         self,
-        map_file: str = "map_standard.json",
+        map_file: str = "data/maps/map_standard.json",
         stride: float = 25.0,
         max_steps: int = 200,
         goal_radius_h: float = 50.0,

@@ -33,9 +33,9 @@ def create_test_environment():
     
     # 加载地图
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    map_file = os.path.join(project_root, 'test_map_standard.json')
+    map_file = os.path.join(project_root, 'data/test_maps/test_map_standard.json')
     if not os.path.exists(map_file):
-        map_file = os.path.join(project_root, 'test_map_v3_compatible.json')
+        map_file = os.path.join(project_root, 'data/test_maps/test_map_v3_compatible.json')
     
     print(f"  加载地图: {map_file}")
     env, start_coords, goal_coords, metadata = load_environment_from_json(map_file)
@@ -76,7 +76,7 @@ def create_test_environment():
     return env, standard, start_vp, goal_vp, dynamic_env
 
 
-def test_standard_planning(planner, output_dir='evtol_v7_results'):
+def test_standard_planning(planner, output_dir='results/v7'):
     """测试1: 标准路径规划"""
     print("\n" + "="*60)
     print("【V7测试1】标准路径规划")
@@ -131,7 +131,7 @@ def test_standard_planning(planner, output_dir='evtol_v7_results'):
         return None, None
 
 
-def test_multi_objective_optimization(planner, n_generations=30, population_size=30, output_dir='evtol_v7_results'):
+def test_multi_objective_optimization(planner, n_generations=30, population_size=30, output_dir='results/v7'):
     """测试2: 多目标优化（验证HV固定参考点修复）"""
     print("\n" + "="*60)
     print("【V7测试2】多目标优化 (HV固定参考点修复验证)")
@@ -203,7 +203,7 @@ def test_multi_objective_optimization(planner, n_generations=30, population_size
     return pareto_front, reference_point
 
 
-def test_uncertainty_analysis(planner, n_samples=200, output_dir='evtol_v7_results'):
+def test_uncertainty_analysis(planner, n_samples=200, output_dir='results/v7'):
     """测试3: 不确定性分析"""
     print("\n" + "="*60)
     print("【V7测试3】不确定性分析 (蒙特卡洛方法)")
@@ -472,7 +472,7 @@ def main():
     print("="*70)
     
     # 创建输出目录
-    output_dir = 'evtol_v7_results'
+    output_dir = 'results/v7'
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(f'{output_dir}/paths', exist_ok=True)
     

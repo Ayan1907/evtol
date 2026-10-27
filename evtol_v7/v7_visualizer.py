@@ -35,7 +35,7 @@ class V7Visualizer:
     
     @staticmethod
     def plot_path_with_buildings(env, path: List, start_pos: tuple, goal_pos: tuple,
-                                flight_profile=None, filename='evtol_v7_results/v7_path_with_buildings.png'):
+                                flight_profile=None, filename='results/v7/v7_path_with_buildings.png'):
         """绘制路径与建筑物（俯视图）"""
         fig, ax = plt.subplots(figsize=(16, 16))
 
@@ -98,7 +98,7 @@ class V7Visualizer:
 
     @staticmethod
     def plot_3d_path_profile(env, path: List, start_pos: tuple, goal_pos: tuple,
-                             flight_profile=None, filename='evtol_v7_results/v7_3d_path_profile.png'):
+                             flight_profile=None, filename='results/v7/v7_3d_path_profile.png'):
         """绘制3D路径剖面"""
         fig = plt.figure(figsize=(16, 12))
         ax = fig.add_subplot(111, projection='3d')
@@ -160,7 +160,7 @@ class V7Visualizer:
 
     @staticmethod
     def plot_height_profile(path: List, start_pos: tuple, goal_pos: tuple,
-                           flight_profile=None, filename='evtol_v7_results/v7_height_profile.png'):
+                           flight_profile=None, filename='results/v7/v7_height_profile.png'):
         """绘制高度剖面图"""
         fig, ax = plt.subplots(figsize=(16, 6))
 
@@ -206,7 +206,7 @@ class V7Visualizer:
     @staticmethod
     def plot_hv_convergence(hv_history: List[float], 
                            diversity_history: List[float] = None,
-                           filename: str = 'evtol_v7_results/v7_hv_convergence.png'):
+                           filename: str = 'results/v7/v7_hv_convergence.png'):
         """
         V7新增: 绘制HV收敛曲线
         
@@ -262,7 +262,7 @@ class V7Visualizer:
 
     @staticmethod
     def plot_pareto_front_2d(pareto_front, objectives: List[str] = None,
-                            filename: str = 'evtol_v7_results/v7_pareto_front_2d.png'):
+                            filename: str = 'results/v7/v7_pareto_front_2d.png'):
         """
         V7: 绘制2D帕累托前沿切片
         
@@ -315,7 +315,7 @@ class V7Visualizer:
 
     @staticmethod
     def plot_pareto_front_3d(pareto_front,
-                            filename: str = 'evtol_v7_results/v7_pareto_front_3d.png'):
+                            filename: str = 'results/v7/v7_pareto_front_3d.png'):
         """V7: 绘制3D帕累托前沿（能耗-时间-噪声）"""
         fig = plt.figure(figsize=(12, 10))
         ax = fig.add_subplot(111, projection='3d')
@@ -351,7 +351,7 @@ class V7Visualizer:
 
     @staticmethod
     def plot_objective_radar(objectives_values: Dict[str, float],
-                             filename: str = 'evtol_v7_results/v7_objective_radar.png'):
+                             filename: str = 'results/v7/v7_objective_radar.png'):
         """
         V7: 绘制目标值雷达图
         
@@ -391,7 +391,7 @@ class V7Visualizer:
     def plot_summary_dashboard(convergence_history: Dict,
                               pareto_front,
                               hv_reference_point: List[float],
-                              filename: str = 'evtol_v7_results/v7_summary_dashboard.png'):
+                              filename: str = 'results/v7/v7_summary_dashboard.png'):
         """
         V7新增: 综合仪表盘
         
@@ -491,7 +491,7 @@ class V7Visualizer:
     @staticmethod
     def plot_noise_heatmap(env, path: List, start_pos: tuple, goal_pos: tuple,
                           noise_model,
-                          filename: str = 'evtol_v7_results/v7_noise_heatmap.png',
+                          filename: str = 'results/v7/v7_noise_heatmap.png',
                           grid_spacing: int = 10, time_hour: int = 10):
         """
         V7: 绘制噪声传播热力图
@@ -630,7 +630,7 @@ class V7Visualizer:
     @staticmethod
     def plot_noise_along_path(path: List, start_pos: tuple, goal_pos: tuple,
                             noise_model, flight_profile=None,
-                            filename: str = 'evtol_v7_results/v7_noise_along_path.png',
+                            filename: str = 'results/v7/v7_noise_along_path.png',
                             current_hour: int = 10, speed: float = 20.0):
         """
         V7: 绘制沿路径的噪声变化曲线图
@@ -766,7 +766,7 @@ def create_v7_visualizer() -> V7Visualizer:
     return V7Visualizer()
 
 
-def visualize_optimization_results(result, output_dir: str = 'evtol_v7_results'):
+def visualize_optimization_results(result, output_dir: str = 'results/v7'):
     """
     可视化优化结果
     
@@ -800,7 +800,7 @@ def visualize_optimization_results(result, output_dir: str = 'evtol_v7_results')
 
 
 def visualize_noise(env, path, start_pos, goal_pos, noise_model, 
-                     flight_profile=None, output_dir: str = 'evtol_v7_results'):
+                     flight_profile=None, output_dir: str = 'results/v7'):
     """
     V7噪声可视化便捷函数
     

@@ -892,7 +892,7 @@ def test_v3_standard():
     
     # 从JSON加载地图
     env = CityEnvironment(size_x=0, size_y=0, size_z=0)
-    map_data = env.load_from_json('/home/ayan1907/evtol/test_map_v3_compatible.json')
+    map_data = env.load_from_json('/home/ayan1907/evtol/data/test_maps/test_map_v3_compatible.json')
     
     start_pos = tuple(map_data['start'])
     goal_pos = tuple(map_data['goal'])

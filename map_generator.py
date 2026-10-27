@@ -364,7 +364,7 @@ def main():
 
     # 保存地图
     print("\n3. 保存地图数据...")
-    output_file = "/home/ayan1907/evtol/test_map_v3_compatible.json"
+    output_file = "/home/ayan1907/evtol/data/test_maps/test_map_v3_compatible.json"
     metadata = {
         'description': 'v3兼容地图 - 验证可行(安全裕度扩展到整个Z轴)',
         'n_buildings_target': n_buildings,
@@ -395,7 +395,7 @@ def main():
     print("-" * 60)
     print("# 在代码中加载地图:")
     print("from map_generator import MapGenerator")
-    print("gen, start, goal, meta = MapGenerator.load_from_json('test_map_v3_compatible.json')")
+    print("gen, start, goal, meta = MapGenerator.load_from_json('data/test_maps/test_map_v3_compatible.json')")
     print("")
     print("# 访问建筑物:")
     print("for building in gen.buildings:")

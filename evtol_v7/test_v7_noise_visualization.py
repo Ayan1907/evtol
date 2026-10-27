@@ -23,7 +23,7 @@ def load_environment_and_path():
     """加载环境和路径数据"""
     
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    map_file = os.path.join(project_root, 'test_map_v3_compatible.json')
+    map_file = os.path.join(project_root, 'data/test_maps/test_map_v3_compatible.json')
     
     # 加载地图
     env, start_coords, goal_coords, metadata = load_environment_from_json(map_file)
@@ -31,7 +31,7 @@ def load_environment_and_path():
     print(f"  地图尺寸: {env.size_x}m × {env.size_y}m × {env.size_z}m")
     
     # 尝试加载V7结果
-    result_file = os.path.join(project_root, 'evtol_v7_results/v7_main_result.json')
+    result_file = os.path.join(project_root, 'results/v7/v7_main_result.json')
     
     # 如果V7路径存在且高度在合理范围，使用V7路径
     use_v7 = False
@@ -74,7 +74,7 @@ def run_path_planning(env):
     print("\n运行V7路径规划...")
     
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    map_file = os.path.join(project_root, 'test_map_v3_compatible.json')
+    map_file = os.path.join(project_root, 'data/test_maps/test_map_v3_compatible.json')
     
     # 加载地图获取起点终点
     _, start_coords, goal_coords, _ = load_environment_from_json(map_file)
@@ -185,7 +185,7 @@ def generate_noise_visualizations():
         goal_pos=goal_pos,
         noise_model=noise_model,
         flight_profile=flight_profile,
-        output_dir='evtol_v7_results'
+        output_dir='results/v7'
     )
     
     print()

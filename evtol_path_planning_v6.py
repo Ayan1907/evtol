@@ -655,7 +655,7 @@ class LowCarbonAStarV6:
         }
 
 
-def test_v5_basic(map_file='/home/ayan1907/evtol/test_map_v3_compatible.json', save_result=False):
+def test_v5_basic(map_file='/home/ayan1907/evtol/data/test_maps/test_map_v3_compatible.json', save_result=False):
     """
     V5基础测试 - 完整国标合规
 

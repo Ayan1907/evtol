@@ -13,7 +13,7 @@ class EnvConfig:
     """环境配置"""
 
     # ---------- 场景 ----------
-    map_file: str = "map_dense.json"   # 相对于 ~/evtol 根目录
+    map_file: str = "data/maps/map_dense.json"   # 相对于 ~/evtol 根目录
     stride: float = 25.0                  # 每步位移（m）—— 决定 episode 长度
     max_steps: int = 200                  # 最大步数（截断）
 

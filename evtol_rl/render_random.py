@@ -38,7 +38,7 @@ def setup_cjk_font(root):
     """注册原项目自带的思源黑体，避免中文变方块。"""
     from matplotlib import font_manager
 
-    cand = os.path.join(root, "fonts", "SourceHanSansSC-Regular.otf")
+    cand = os.path.join(root, "assets/fonts", "SourceHanSansSC-Regular.otf")
     if os.path.exists(cand):
         font_manager.fontManager.addfont(cand)
         plt.rcParams["font.sans-serif"] = ["Source Han Sans SC", "DejaVu Sans"]
@@ -185,7 +185,7 @@ def draw(env, result, out_png, out_gif, fps=12):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--map", default="map_standard.json")
+    ap.add_argument("--map", default="data/maps/map_standard.json")
     ap.add_argument("--stride", type=float, default=25.0)
     ap.add_argument("--max-steps", type=int, default=200)
     ap.add_argument("--seed", type=int, default=0)

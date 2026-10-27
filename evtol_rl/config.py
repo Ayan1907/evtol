@@ -39,7 +39,21 @@ class EnvConfig:
                                           #   设 float("inf") → 永不终止，只做软惩罚
     height_penalty: float = 2.0           # 软惩罚系数：每违规 1 米扣多少奖励
 
+    # ---------- 奖励函数（v1 设计 2026-10-27，依据 .research/rl-reward-design-20261027）----------
+    #   聚合 = 三层混合：合规硬终止（字典序 L1）+ 安全裕度缓冲走廊（L2）
+    #          + 进度(严格PBRS)与能耗(固定E_ref归一)线性加权（主干）
+    r_arrive: float = 100.0               # 到达终端奖励（文献典型 +100）
+    r_collide: float = -100.0             # 撞楼/违规终端惩罚（TEeVTOL 同构 ±100）
+    r_step: float = -0.01                 # 每步时间惩罚（防磨蹭；time/length 合并项的惩罚面）
+    k_progress: float = 100.0             # PBRS 势幅度：Φ(s) = −K·d₃D/d₀（d₀=初始距离）
+    pbrs_gamma: float = 0.99              # ⚠️ 必须与 TrainConfig.gamma 一致，否则 shaping 有偏
+    w_energy: float = 0.0                 # 能耗项权重（0=关；文献锚点 0.2，engrXiv 2026）
+    w_margin: float = 0.0                 # 安全裕度项权重（0=关；建议 0.05）
+    margin_band: float = 20.0             # 走廊缓冲宽度（m）：距允许带边界 <20m 开始线性罚
+    e_ref_kwh: float = 0.0                # 能耗归一参考 kWh（0 = 自动实测巡航单步能耗）
+
     # ---------- 物理接口 ----------
+
     cruise_speed: float = 50.0            # 用于由 stride 推算 dt（m/s）
     use_energy: bool = True               # 是否启用单步能耗计算
     use_wind: bool = True                 # 是否启用风场

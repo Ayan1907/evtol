@@ -275,7 +275,7 @@ class PathEvaluator:
         return length
     
     def _calculate_energy(self, path_coords: List) -> float:
-        """使用高保真能耗模型计算能耗（支持风场）"""
+        """使用高保真能耗模型计算能耗"""
         try:
             # 根据路径总长度和巡航速度估算飞行时间，然后平均分配dt
             total_length = self._calculate_length(path_coords)
@@ -340,7 +340,7 @@ class PathEvaluator:
 
 
 # =============================================================================
-# 多目标优化器 - V7增强版
+# 多目标优化器
 # =============================================================================
 
 class MultiObjectiveOptimizerV7:
@@ -396,10 +396,10 @@ class MultiObjectiveOptimizerV7:
         
         path.append(self.goal_pos)
         
-        # 【修复】路径顺序修正：确保中间点X坐标单调递增
+        # 路径顺序修正：确保中间点X坐标单调递增
         path = self._fix_path_order(path)
         
-        # 【新增】高度约束修正：确保所有中间节点满足国标高度约束
+        # 高度约束修正：确保所有中间节点满足国标高度约束
         path = self._fix_height_constraints(path)
         
         return path

@@ -49,6 +49,15 @@ def make_env(cfg: EnvConfig, seed: int = 0):
             wind_speed=cfg.wind_speed,
             wind_direction=cfg.wind_direction,
             turbulence=cfg.turbulence,
+            r_arrive=cfg.r_arrive,
+            r_collide=cfg.r_collide,
+            r_step=cfg.r_step,
+            k_progress=cfg.k_progress,
+            pbrs_gamma=cfg.pbrs_gamma,
+            w_energy=cfg.w_energy,
+            w_margin=cfg.w_margin,
+            margin_band=cfg.margin_band,
+            e_ref_kwh=cfg.e_ref_kwh,
             seed=seed,
         )
     return _thunk
@@ -93,6 +102,9 @@ def main():
     ap.add_argument("--map", default=EnvConfig.map_file)
     ap.add_argument("--eval-only", action="store_true")
     ap.add_argument("--save-path", default=TrainConfig.save_path)
+    ap.add_argument("--w-energy", type=float, default=None, help="能耗项权重（覆盖 config）")
+    ap.add_argument("--w-margin", type=float, default=None, help="安全裕度项权重（覆盖 config）")
+    ap.add_argument("--eval-episodes", type=int, default=None, help="评估 episode 数（覆盖 config）")
     args = ap.parse_args()
 
     try:
@@ -106,8 +118,14 @@ def main():
         return 1
 
     env_cfg = EnvConfig(map_file=args.map)
+    if args.w_energy is not None:
+        env_cfg.w_energy = args.w_energy
+    if args.w_margin is not None:
+        env_cfg.w_margin = args.w_margin
     train_cfg = TrainConfig(total_timesteps=args.timesteps, seed=args.seed,
                             save_path=args.save_path)
+    if args.eval_episodes is not None:
+        train_cfg.eval_episodes = args.eval_episodes
 
     print("=" * 62)
     print("PPO 训练 eVTOL 航迹决策策略")

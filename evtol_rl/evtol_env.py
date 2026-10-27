@@ -343,29 +343,22 @@ class EVTOLEnv(gym.Env):
     metadata = {"render_modes": ["rgb_array"], "render_fps": 10}
 
     # ---------------------------------------------------------------------
-    # [TODO-DESIGN] 奖励权重 —— 占位值，请全部替换为你自己的设计
     # ---------------------------------------------------------------------
-    # 占位实现只保证"能跑出 gif"，没有任何技术含量。不要保留。
-    #
-    # 可调用的现成接口（全部来自原项目，物理模型不用自己写）：
-    #   ① 单步能耗（W）  self.step_power(p_from, p_to)['P_total_w']
-    #   ② 风场代价       self.wind_field.calculate_wind_cost(x, y, z, dir, t)
-    #   ③ 噪声级（dB）   self.noise_model.calculate_noise_level(pos, phase, speed)
-    #   ④ 约束违反(0~1)  self.constraints.calculate_constraint_cost(...)
-    #   ⑤ 国标巡航高度带 120–180 m
-    #   ⑥ 离楼距离       self.city.clearance_to_buildings(x, y, z)
-    #
-    # 面试四问会直接问到这里：
-    #   1) 为什么这样设计奖励？
-    #   2) 改了几版？为什么改？（要能讲出"第一版太稀疏、多少步不收敛"）
-    #   3) 稀疏 vs 稠密 / shaping 是否引入策略偏差？
-    #   4) 与 MPC / 比例导引等基线的对比怎么做？
+    # 奖励函数（v1 设计，2026-10-27；调研依据 .research/rl-reward-design-20261027）
+    #   聚合 = 三层混合：合规硬终止（字典序第一层）+ 安全裕度缓冲走廊（第二层）
+    #          + 进度(严格PBRS)与能耗(固定 E_ref 归一)线性加权（主干）
+    #   面试四问对应：设计理由=TEeVTOL 缺口+文献锚点；版本记录=git log；
+    #   偏差控制=PBRS 严格形式（γ 残差已修正）；基线对比=run_baselines + baseline_compare。
     # ---------------------------------------------------------------------
-    R_PROGRESS: float = 1.0     # TODO 距离缩短奖励系数
-    R_ARRIVE: float = 100.0     # TODO 成功到达的终端奖励
-    R_COLLIDE: float = -50.0    # TODO 碰撞 / 越界的终端惩罚
-    R_STEP: float = -0.01       # TODO 每步时间惩罚
-    W_ENERGY: float = 0.0       # TODO 能耗惩罚权重（建议先设 0，跑通后再打开）
+    R_ARRIVE: float = 100.0      # 到达终端奖励（文献典型 +100）
+    R_COLLIDE: float = -100.0    # 撞楼/违规终端惩罚（TEeVTOL 同构 ±100）
+    R_STEP: float = -0.01        # 每步时间惩罚（防磨蹭；time/length 合并项的惩罚面）
+    K_PROGRESS: float = 100.0    # PBRS 势幅度：Φ(s) = −K·d₃D(s,goal)/d₀（d₀=初始距离）
+    PBRS_GAMMA: float = 0.99     # ⚠️ 必须与训练 γ（TrainConfig.gamma）一致
+    W_ENERGY: float = 0.0        # 能耗项权重（0=关闭；文献锚点 0.2）
+    W_MARGIN: float = 0.0        # 安全裕度项权重（0=关闭；建议 0.05）
+    MARGIN_BAND: float = 20.0    # 走廊缓冲宽度（m）
+    E_REF_FALLBACK_J: float = 61200.0   # 能耗模型不可用时巡航单步能耗兜底（≈0.017 kWh）
 
     # ---------------------------------------------------------------------
     # 动作集：26 邻域方向
@@ -398,6 +391,15 @@ class EVTOLEnv(gym.Env):
         use_flight_profile: bool = True,
         height_hard_limit: float = 10.0,
         height_penalty: float = 2.0,
+        r_arrive: float = 100.0,
+        r_collide: float = -100.0,
+        r_step: float = -0.01,
+        k_progress: float = 100.0,
+        pbrs_gamma: float = 0.99,
+        w_energy: float = 0.0,
+        w_margin: float = 0.0,
+        margin_band: float = 20.0,
+        e_ref_kwh: float = 0.0,
         wind_speed: float = 5.0,
         wind_direction: float = 315.0,
         turbulence: float = 0.1,
@@ -432,6 +434,32 @@ class EVTOLEnv(gym.Env):
         self.start = np.array(self.city.start, dtype=np.float64)
         self.goal = np.array(self.city.goal, dtype=np.float64)
 
+        # ---------------- 奖励函数参数（v1 设计，2026-10-27）----------------
+        self.r_arrive = float(r_arrive)
+        self.r_collide = float(r_collide)
+        self.r_step = float(r_step)
+        self.k_progress = float(k_progress)
+        self.pbrs_gamma = float(pbrs_gamma)
+        self.w_energy = float(w_energy)
+        self.w_margin = float(w_margin)
+        self.margin_band = float(margin_band)
+        # PBRS 归一化基准：初始 3D 距离
+        self.d_init = max(float(np.linalg.norm(self.goal - self.start)), 1e-6)
+        # 能耗归一参考 E_ref：巡航高度水平一个 stride 的实测能耗（尺度物理已知 → 静态归一）
+        if e_ref_kwh and float(e_ref_kwh) > 0:
+            self.e_ref_j = float(e_ref_kwh) * 3.6e6
+        else:
+            try:
+                _dh = self.goal - self.start
+                _dh = np.array([_dh[0], _dh[1], 0.0])
+                _u = _dh / (np.linalg.norm(_dh) + 1e-9)
+                _p0 = np.array([self.start[0], self.start[1], 150.0])
+                _p1 = _p0 + _u * self.stride
+                self.e_ref_j = float(self.step_power(_p0, _p1, time_sec=0.0)["E_j"])
+            except Exception:
+                self.e_ref_j = self.E_REF_FALLBACK_J
+        if not np.isfinite(self.e_ref_j) or self.e_ref_j <= 0:
+            self.e_ref_j = self.E_REF_FALLBACK_J
         # ---------------- 物理组件（可选，失败则降级）----------------
         self.energy_model = _ENV_MODEL if use_energy else None
         self.energy_error = _energy_import_error
@@ -645,53 +673,72 @@ class EVTOLEnv(gym.Env):
             return 0.0
 
     # ===================================================================
-    # [TODO-DESIGN] 奖励函数
-    # ===================================================================
+    def _potential(self, pos: np.ndarray) -> float:
+        """PBRS 势函数：Φ(s) = −K · d₃D(s, goal) / d₀（归一化到 [−K, 0]）。
+
+        严格势函数形式保证 shaping 不改变最优策略（Ng, Harada & Russell 1999）。
+        旧占位实现 R_PROGRESS×(d_prev−d_now) 在 γ<1 下等价于本形式
+        减去一个 (1−γ)·K·d/d₀ 的正残差——偏向"高估远处进度"，已修正。
+        """
+        d = float(np.linalg.norm(self.goal - pos))
+        return -self.k_progress * (d / self.d_init)
+
     def _compute_reward(
         self,
         pos_from: np.ndarray,
         pos_to: np.ndarray,
+        terminated: bool,
         arrived: bool,
         collided: bool,
         info: Dict[str, Any],
     ) -> float:
-        """占位奖励实现 —— 请替换为你自己的设计（这是面试要展开讲的部分）。
+        """奖励函数 v1（2026-10-27）——三层混合聚合。
 
-        当前占位版：
-            距离缩短 × R_PROGRESS + 到达/碰撞终端奖励 + 每步时间惩罚
-            + 高度剖面违规软惩罚（系数 height_penalty，见 __init__）
-            （能耗项默认关闭，W_ENERGY = 0）
-
-        注意：高度剖面的**软惩罚**在下面第 ④ 项，是接入 FlightProfile 时给好的；
-              是否需要**额外的安全裕度项**（不违规但贴边飞也要罚）仍属你的设计空间。
+        ① 进度：严格 PBRS   F_t = γ·Φ(s′) − Φ(s)
+            Φ(s′) 恒取真实势值（不按终态置零）：到达时 d≈0 自然趋 0；
+            撞楼/违规时保持深负，避免"终态置零约定"在失败终止步产生 +K·d/d₀ 的大额正残差
+            （实测：随机撞楼步 +99 抵消 −100，修正后恢复为净负）
+        ② 时间：每步小罚 −0.01（time/length 合并项的惩罚面，防磨蹭）
+        ③ 能耗：−w_e · (E_step / E_ref)，E_ref=巡航单步实测能耗（静态归一，
+           不用 VecNormalize——运行统计漂移会破坏人工量级比例）
+        ④ 安全裕度：−w_m · max(0, d₀_band − margin)，margin=到允许带边界距离；
+           仅在未违规时计（违规由⑤+硬终止处理，避免双计）
+        ⑤ 合规：高度违规软罚 −2.0/m（FlightProfile 接入项，保留）
+        ⑥ 终端：到达 +100 / 撞楼或违规 −100
         """
         reward = 0.0
 
-        # ① 距离 shaping（占位）
-        d_prev = float(np.linalg.norm(self.goal - pos_from))
-        d_now = float(np.linalg.norm(self.goal - pos_to))
-        reward += self.R_PROGRESS * (d_prev - d_now)
+        # ① 进度（严格 PBRS；失败终止不置零，理由见 docstring）
+        phi_from = self._potential(pos_from)
+        phi_to = self._potential(pos_to)
+        reward += self.pbrs_gamma * phi_to - phi_from
 
-        # ② 每步时间惩罚（占位）
-        reward += self.R_STEP
+        # ② 每步时间惩罚
+        reward += self.r_step
 
-        # ③ 能耗惩罚（占位：默认关闭）
-        if self.W_ENERGY > 0.0:
-            energy_j = info.get("energy_j", 0.0)
-            reward -= self.W_ENERGY * energy_j
+        # ③ 能耗（固定 E_ref 归一）
+        if self.w_energy != 0.0:
+            e_j = float(info.get("energy_j", 0.0))
+            reward -= self.w_energy * (e_j / self.e_ref_j)
 
-        # ④ 国标高度剖面违规（接入 FlightProfile 后新增）
-        #    轻度越带只扣分、有梯度；越得多扣得多。
-        #    超过 height_hard_limit 的情形由 _check_done 直接判终止。
+        # ④ 安全裕度缓冲走廊（未违规时才计）
+        if self.w_margin != 0.0 and not collided and self.flight_profile is not None:
+            hv = float(info.get("height_violation_m", 0.0))
+            if hv <= 0.0:
+                lo, hi = self.allowed_height_range()
+                m = min(self.pos[2] - lo, hi - self.pos[2])
+                reward -= self.w_margin * max(0.0, self.margin_band - m)
+
+        # ⑤ 高度违规软罚（越带 > height_hard_limit 由 _check_done 硬终止）
         hv = float(info.get("height_violation_m", 0.0))
         if hv > 0.0:
             reward -= self.height_penalty * hv
 
-        # ⑤ 终端
+        # ⑥ 终端
         if arrived:
-            reward += self.R_ARRIVE
+            reward += self.r_arrive
         elif collided:
-            reward += self.R_COLLIDE
+            reward += self.r_collide
 
         return float(reward)
 
@@ -812,7 +859,8 @@ class EVTOLEnv(gym.Env):
 
         # ---- 5. 奖励 ----
         reward = self._compute_reward(
-            pos_from, self.pos, reason == "arrived", collided, info
+            pos_from, self.pos, terminated,
+            reason == "arrived", collided, info
         )
 
         info.update({

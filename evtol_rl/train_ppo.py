@@ -58,6 +58,9 @@ def make_env(cfg: EnvConfig, seed: int = 0):
             w_margin=cfg.w_margin,
             margin_band=cfg.margin_band,
             e_ref_kwh=cfg.e_ref_kwh,
+            start_altitude=cfg.start_altitude,
+            shield=cfg.shield,
+            blocked_penalty=cfg.blocked_penalty,
             seed=seed,
         )
     return _thunk
@@ -66,7 +69,7 @@ def make_env(cfg: EnvConfig, seed: int = 0):
 def evaluate(model, env_cfg: EnvConfig, episodes: int = 50, seed: int = 123):
     """跑 N 个 episode，统计成功率与平均能耗。"""
     env = env_cfg and make_env(env_cfg, seed=seed)()
-    stats = {"success": 0, "collision": 0, "timeout": 0,
+    stats = {"success": 0, "collision": 0, "timeout": 0, "blocked": 0,
              "energy_kwh": [], "steps": [], "distance": []}
 
     for ep in range(episodes):
@@ -79,6 +82,8 @@ def evaluate(model, env_cfg: EnvConfig, episodes: int = 50, seed: int = 123):
             if term or trunc:
                 reason = info["reason"]
                 stats[reason] = stats.get(reason, 0) + 1
+            if info.get("blocked"):
+                stats["blocked"] += 1
                 stats["energy_kwh"].append(energy / 3.6e6)
                 stats["steps"].append(info["step"])
                 stats["distance"].append(info["distance"])
@@ -105,6 +110,14 @@ def main():
     ap.add_argument("--w-energy", type=float, default=None, help="能耗项权重（覆盖 config）")
     ap.add_argument("--w-margin", type=float, default=None, help="安全裕度项权重（覆盖 config）")
     ap.add_argument("--eval-episodes", type=int, default=None, help="评估 episode 数（覆盖 config）")
+    ap.add_argument("--ent-coef", type=float, default=None, help="熵系数（覆盖 config）")
+    ap.add_argument("--gamma", type=float, default=None, help="折扣 γ（同时同步 env 的 pbrs_gamma）")
+    ap.add_argument("--height-hard-limit", type=float, default=None, help="高度硬终止阈值 m（inf=关闭硬终止，仅软罚）")
+    ap.add_argument("--start-altitude", type=float, default=None, help="课程学习：起点高度覆盖")
+    ap.add_argument("--no-shield", action="store_true", help="关闭动作屏蔽（碰撞即终止）")
+    ap.add_argument("--stride", type=float, default=None, help="分辨率课程：每步位移 m")
+    ap.add_argument("--max-steps", type=int, default=None, help="分辨率课程：episode 步数上限")
+    ap.add_argument("--init-model", default=None, help="从已有模型继续训练")
     args = ap.parse_args()
 
     try:
@@ -126,6 +139,21 @@ def main():
                             save_path=args.save_path)
     if args.eval_episodes is not None:
         train_cfg.eval_episodes = args.eval_episodes
+    if args.ent_coef is not None:
+        train_cfg.ent_coef = args.ent_coef
+    if args.gamma is not None:
+        train_cfg.gamma = args.gamma
+        env_cfg.pbrs_gamma = args.gamma
+    if args.height_hard_limit is not None:
+        env_cfg.height_hard_limit = args.height_hard_limit
+    if args.start_altitude is not None:
+        env_cfg.start_altitude = args.start_altitude
+    if args.no_shield:
+        env_cfg.shield = False
+    if args.stride is not None:
+        env_cfg.stride = args.stride
+    if args.max_steps is not None:
+        env_cfg.max_steps = args.max_steps
 
     print("=" * 62)
     print("PPO 训练 eVTOL 航迹决策策略")
@@ -152,19 +180,23 @@ def main():
         tb_dir = None
         print("（未安装 tensorboard，跳过 TB 日志；训练曲线用 checkpoint 评估替代）")
 
-    model = PPO(
-        "MlpPolicy",
-        env,
-        learning_rate=train_cfg.learning_rate,
-        n_steps=train_cfg.n_steps,
-        batch_size=train_cfg.batch_size,
-        gamma=train_cfg.gamma,
-        gae_lambda=train_cfg.gae_lambda,
-        ent_coef=train_cfg.ent_coef,
-        verbose=1,
-        tensorboard_log=tb_dir,
-        seed=train_cfg.seed,
-    )
+    if args.init_model:
+        model = PPO.load(args.init_model, env=env)
+        print(f"从 {args.init_model} 继续训练（课程学习微调）")
+    else:
+        model = PPO(
+            "MlpPolicy",
+            env,
+            learning_rate=train_cfg.learning_rate,
+            n_steps=train_cfg.n_steps,
+            batch_size=train_cfg.batch_size,
+            gamma=train_cfg.gamma,
+            gae_lambda=train_cfg.gae_lambda,
+            ent_coef=train_cfg.ent_coef,
+            verbose=1,
+            tensorboard_log=tb_dir,
+            seed=train_cfg.seed,
+        )
 
     ckpt = CheckpointCallback(
         save_freq=50_000, save_path=os.path.join(_HERE, "checkpoints"),

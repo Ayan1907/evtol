@@ -16,6 +16,9 @@ class EnvConfig:
     map_file: str = "data/maps/map_dense.json"   # 相对于 ~/evtol 根目录
     stride: float = 25.0                  # 每步位移（m）—— 决定 episode 长度
     max_steps: int = 200                  # 最大步数（截断）
+    start_altitude: float = None          # 课程学习起点高度（None=地图默认 80m）
+    shield: bool = True                   # 动作屏蔽（离散 shield）：碰撞→原地阻挡+小罚，训练期零死亡
+    blocked_penalty: float = -0.5         # 被阻挡一步的惩罚（介于步惩罚与终端之间）
 
     # ---------- 到达判定 ----------
     goal_radius_h: float = 50.0           # 水平到达半径（m）
@@ -45,8 +48,8 @@ class EnvConfig:
     r_arrive: float = 100.0               # 到达终端奖励（文献典型 +100）
     r_collide: float = -100.0             # 撞楼/违规终端惩罚（TEeVTOL 同构 ±100）
     r_step: float = -0.01                 # 每步时间惩罚（防磨蹭；time/length 合并项的惩罚面）
-    k_progress: float = 100.0             # PBRS 势幅度：Φ(s) = −K·d₃D/d₀（d₀=初始距离）
-    pbrs_gamma: float = 0.99              # ⚠️ 必须与 TrainConfig.gamma 一致，否则 shaping 有偏
+    k_progress: float = 10.0              # PBRS 势幅度：Φ(s) = −K·d₃D/d₀（d₀=初始距离）\n                                          #   与 γ=0.999 配对：前进 +0.088/步 ≫ 悬停 −0.001/步\n                                          #   （Run1 K=100 γ=0.99 → 悬停蹭分；Run1b K=1 → 信号≈0 等效稀疏）
+    pbrs_gamma: float = 0.999             # ⚠️ 必须与 TrainConfig.gamma 一致；0.999 匹配 116–200 步视界，\n                                          #   且 (1−γ) 残差缩小 10 倍（Run1b 教训：γ=0.99 时残差吞噬学习信号）
     w_energy: float = 0.0                 # 能耗项权重（0=关；文献锚点 0.2，engrXiv 2026）
     w_margin: float = 0.0                 # 安全裕度项权重（0=关；建议 0.05）
     margin_band: float = 20.0             # 走廊缓冲宽度（m）：距允许带边界 <20m 开始线性罚
@@ -80,7 +83,7 @@ class TrainConfig:
     learning_rate: float = 3e-4
     n_steps: int = 2048
     batch_size: int = 64
-    gamma: float = 0.99
+    gamma: float = 0.999                  # 与 EnvConfig.pbrs_gamma 必须一致（视界匹配 200 步 episode）
     gae_lambda: float = 0.95
     ent_coef: float = 0.0
     seed: int = 0

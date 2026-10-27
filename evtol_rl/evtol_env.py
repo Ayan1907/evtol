@@ -353,8 +353,8 @@ class EVTOLEnv(gym.Env):
     R_ARRIVE: float = 100.0      # 到达终端奖励（文献典型 +100）
     R_COLLIDE: float = -100.0    # 撞楼/违规终端惩罚（TEeVTOL 同构 ±100）
     R_STEP: float = -0.01        # 每步时间惩罚（防磨蹭；time/length 合并项的惩罚面）
-    K_PROGRESS: float = 100.0    # PBRS 势幅度：Φ(s) = −K·d₃D(s,goal)/d₀（d₀=初始距离）
-    PBRS_GAMMA: float = 0.99     # ⚠️ 必须与训练 γ（TrainConfig.gamma）一致
+    K_PROGRESS: float = 10.0     # PBRS 势幅度：Φ(s) = −K·d₃D(s,goal)/d₀（d₀=初始距离）\n                                 #   与 γ=0.999 配对：前进 +0.088/步 ≫ 悬停 −0.001/步
+    PBRS_GAMMA: float = 0.999    # ⚠️ 必须与训练 γ（TrainConfig.gamma）一致
     W_ENERGY: float = 0.0        # 能耗项权重（0=关闭；文献锚点 0.2）
     W_MARGIN: float = 0.0        # 安全裕度项权重（0=关闭；建议 0.05）
     MARGIN_BAND: float = 20.0    # 走廊缓冲宽度（m）
@@ -394,12 +394,15 @@ class EVTOLEnv(gym.Env):
         r_arrive: float = 100.0,
         r_collide: float = -100.0,
         r_step: float = -0.01,
-        k_progress: float = 100.0,
-        pbrs_gamma: float = 0.99,
+        k_progress: float = 10.0,
+        pbrs_gamma: float = 0.999,
         w_energy: float = 0.0,
         w_margin: float = 0.0,
         margin_band: float = 20.0,
         e_ref_kwh: float = 0.0,
+        start_altitude: Optional[float] = None,   # 课程学习：覆盖起点高度（None=用地图默认）
+        shield: bool = False,
+        blocked_penalty: float = -0.5,
         wind_speed: float = 5.0,
         wind_direction: float = 315.0,
         turbulence: float = 0.1,
@@ -432,6 +435,8 @@ class EVTOLEnv(gym.Env):
         self.size_y = self.city.size_y
         self.size_z = self.city.size_z
         self.start = np.array(self.city.start, dtype=np.float64)
+        if start_altitude is not None:
+            self.start[2] = float(start_altitude)   # 课程学习：抬高起点（爬升段剖面自动适配）
         self.goal = np.array(self.city.goal, dtype=np.float64)
 
         # ---------------- 奖励函数参数（v1 设计，2026-10-27）----------------
@@ -442,6 +447,8 @@ class EVTOLEnv(gym.Env):
         self.pbrs_gamma = float(pbrs_gamma)
         self.w_energy = float(w_energy)
         self.w_margin = float(w_margin)
+        self.shield = bool(shield)
+        self.blocked_penalty = float(blocked_penalty)
         self.margin_band = float(margin_band)
         # PBRS 归一化基准：初始 3D 距离
         self.d_init = max(float(np.linalg.norm(self.goal - self.start)), 1e-6)
@@ -742,7 +749,7 @@ class EVTOLEnv(gym.Env):
         if arrived:
             reward += self.r_arrive
         elif collided:
-            reward += self.r_collide
+            reward += self.blocked_penalty if self.shield else self.r_collide
 
         return float(reward)
 
@@ -854,8 +861,10 @@ class EVTOLEnv(gym.Env):
         self.steps += 1
 
         # ---- 4. 终止判定 ----
+        # 离散 shield：训练期碰撞→原地阻挡（不终止），保证探索期零死亡
+        hard_collision = collided and not self.shield
         terminated, truncated, reason = self._check_done(
-            self.pos, collided, height_violation
+            self.pos, hard_collision, height_violation
         )
         if terminated or truncated:
             self.done_reason = reason

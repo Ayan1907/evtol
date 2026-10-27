@@ -1,0 +1,34 @@
+{
+  "test_name": "wind_directions_comparison",
+  "description": "三种不同风向的风场代价对比",
+  "path_direction": [
+    1,
+    1,
+    0
+  ],
+  "wind_speed": 8.0,
+  "wind_field_type": "ImprovedWindField",
+  "results": {
+    "315": {
+      "title": "西北风 (315°)",
+      "description": "从西北吹向东南",
+      "cost_min": 0.1398643984425602,
+      "cost_max": 1.0,
+      "path_length": 50
+    },
+    "90": {
+      "title": "南风 (90°)",
+      "description": "从南吹向北",
+      "cost_min": 0.2116388794689979,
+      "cost_max": 1.0,
+      "path_length": 53
+    },
+    "225": {
+      "title": "西南风 (225°)",
+      "description": "从西南吹向东北",
+      "cost_min": 0.05113553201908552,
+      "cost_max": 1.0,
+      "path_length": 51
+    }
+  }
+}

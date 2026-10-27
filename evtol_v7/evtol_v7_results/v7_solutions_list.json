@@ -1,0 +1,140 @@
+[
+  {
+    "id": 3,
+    "objectives": {
+      "energy": 1.8734685857799018,
+      "time": 56.570113819077996,
+      "noise": 82.66669136736742,
+      "safety": 0.05916666666666666,
+      "length": 2828.5056909539
+    },
+    "fitness": null,
+    "rank": 1,
+    "crowding_distance": Infinity,
+    "path_summary": {
+      "n_nodes": 10,
+      "total_length": 2291.0966806313527,
+      "height_stats": {
+        "min": 82.0,
+        "max": 100.0,
+        "mean": 91.0,
+        "std": 5.744562646538029
+      }
+    }
+  },
+  {
+    "id": 1,
+    "objectives": {
+      "energy": 1.9746299971960026,
+      "time": 56.56995669080895,
+      "noise": 82.66669136736742,
+      "safety": 0.05916666666666666,
+      "length": 2828.4978345404475
+    },
+    "fitness": null,
+    "rank": 1,
+    "crowding_distance": Infinity,
+    "path_summary": {
+      "n_nodes": 10,
+      "total_length": 2545.6480510864026,
+      "height_stats": {
+        "min": 82.0,
+        "max": 100.0,
+        "mean": 91.0,
+        "std": 5.744562646538029
+      }
+    }
+  },
+  {
+    "id": 4,
+    "objectives": {
+      "energy": 1.975247819759926,
+      "time": 56.5732794368122,
+      "noise": 82.06377929674647,
+      "safety": 0.05341666666666667,
+      "length": 2828.66397184061
+    },
+    "fitness": null,
+    "rank": 1,
+    "crowding_distance": 2.6878887417889414,
+    "path_summary": {
+      "n_nodes": 10,
+      "total_length": 2545.75762691353,
+      "height_stats": {
+        "min": 86.0,
+        "max": 100.0,
+        "mean": 97.9,
+        "std": 4.482186966202994
+      }
+    }
+  },
+  {
+    "id": 2,
+    "objectives": {
+      "energy": 2.0619975778777664,
+      "time": 62.50894304137406,
+      "noise": 81.75760045827651,
+      "safety": 0.05916666666666666,
+      "length": 3125.447152068703
+    },
+    "fitness": null,
+    "rank": 1,
+    "crowding_distance": Infinity,
+    "path_summary": {
+      "n_nodes": 10,
+      "total_length": 2558.3439956346756,
+      "height_stats": {
+        "min": 82.0,
+        "max": 100.0,
+        "mean": 91.0,
+        "std": 5.744562646538029
+      }
+    }
+  },
+  {
+    "id": 0,
+    "objectives": {
+      "energy": 2.656154136082053,
+      "time": 61.62369656657881,
+      "noise": 79.15658090031542,
+      "safety": 0.014999999999999986,
+      "length": 3081.1848283289405
+    },
+    "fitness": null,
+    "rank": 1,
+    "crowding_distance": 3.0336356956295885,
+    "path_summary": {
+      "n_nodes": 10,
+      "total_length": 3081.1848283289405,
+      "height_stats": {
+        "min": 80.0,
+        "max": 180.0,
+        "mean": 144.0,
+        "std": 35.552777669262355
+      }
+    }
+  },
+  {
+    "id": 6,
+    "objectives": {
+      "energy": 3.565737127069008,
+      "time": 61.22916156038517,
+      "noise": 77.28699301010654,
+      "safety": 0.01,
+      "length": 3061.4580780192587
+    },
+    "fitness": null,
+    "rank": 1,
+    "crowding_distance": Infinity,
+    "path_summary": {
+      "n_nodes": 10,
+      "total_length": 2653.4770289801027,
+      "height_stats": {
+        "min": 30.0,
+        "max": 293.0,
+        "mean": 191.1,
+        "std": 91.70872368537249
+      }
+    }
+  }
+]

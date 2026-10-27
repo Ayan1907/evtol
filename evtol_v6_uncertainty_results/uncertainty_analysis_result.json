@@ -1,0 +1,33 @@
+{
+  "baseline_energy_kwh": 2.51463976863556,
+  "uncertainty_config": {
+    "n_samples": 500,
+    "sampling_method": "lhs",
+    "confidence_level": 0.95,
+    "failure_threshold": 0.15
+  },
+  "energy_statistics": {
+    "mean": 2.2177970056759078,
+    "std": 0.24148021943239936,
+    "min": 1.8286759874178118,
+    "max": 2.7396061277676327,
+    "median": 2.186703743376376,
+    "p5": 1.8732475741055314,
+    "p95": 2.6412370649457686
+  },
+  "risk_metrics": {
+    "failure_probability": 0.0,
+    "energy_exceedance_prob": 0.15,
+    "robustness_index": 1.0,
+    "cvar_95": 2.6703039454592714
+  },
+  "sensitivity": {
+    "wind": 0.021313190814514733,
+    "battery": 0.06568076979737325,
+    "power": 0.0
+  },
+  "path_info": {
+    "num_nodes": 51,
+    "total_distance_m": 3320.7528260416434
+  }
+}

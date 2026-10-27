@@ -1,0 +1,34 @@
+{
+  "regions": [
+    {
+      "name": "大埔（稀疏）",
+      "buildings": 155,
+      "density": "24.8 栋/km²",
+      "density_rank": "稀疏 (Sparse)"
+    },
+    {
+      "name": "大埔（密集）",
+      "buildings": 489,
+      "density": "78.2 栋/km²",
+      "density_rank": "中等密度 (Medium)"
+    },
+    {
+      "name": "大埔（完整）",
+      "buildings": 10013,
+      "density": "155.8 栋/km²",
+      "density_rank": "超高密度 (Very High Density)"
+    },
+    {
+      "name": "沙田",
+      "buildings": 6204,
+      "density": "121.7 栋/km²",
+      "density_rank": "高密度 (High Density)"
+    },
+    {
+      "name": "荃湾",
+      "buildings": 7093,
+      "density": "118.0 栋/km²",
+      "density_rank": "高密度 (High Density)"
+    }
+  ]
+}

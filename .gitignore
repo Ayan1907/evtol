@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 训练产物
+runs/
+tensorboard/
+*.zip
+*.pt
+*.onnx
+
+# 结果目录（大，可再生）
+monte_carlo_results/
+comparison_maps/
+*.gif
+*.mp4
+
+# 系统
+.DS_Store
+Thumbs.db

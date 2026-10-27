@@ -1,0 +1,14 @@
+# eVTOL-RL 骨架依赖
+# 第 1 周（环境 + 随机策略 gif）只需要 numpy + matplotlib
+numpy>=1.24
+matplotlib>=3.7
+
+# 第 2 周起（训练）需要以下两个
+gymnasium>=0.29
+stable-baselines3>=2.3
+
+# 日志
+tensorboard>=2.14
+
+# 注意：不要 pip install 原项目里没用的包；本目录只依赖上面这几个。
+# 原项目自身的依赖（scipy 等）请沿用你原来的环境。

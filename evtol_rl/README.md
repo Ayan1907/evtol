@@ -1,0 +1,231 @@
+# eVTOL-RL · 在线航迹决策
+
+在 eVTOL 城市航迹规划问题（原获奖项目）之上，派生一个**强化学习逐步决策**方向。
+
+> **诚实边界**：奖项颁给的是原方案（低碳 A\* + NSGA-II，见 `../V4_论文材料整理.md`）。
+> 本目录是**新增工作**，不修改原项目任何文件，也不要对外说"获奖作品是 RL 做的"。
+
+---
+
+## 一、这个项目要解决什么
+
+原项目的痛点是**离线、慢**：
+
+| 方法 | 规划耗时 | 说明 |
+|---|---|---|
+| 标准 3D A\* | 0.27 s | 合规 0%，能耗 3.40 kWh |
+| 低碳 A\* | — | 合规 100%，能耗 4.139 kWh |
+| **NSGA-II 多目标** | **17.19 s** | 8 个 Pareto 解 |
+
+原项目文档自陈：**"对实时性要求高的场景不适用"**。
+
+本项目的目标：**训一个毫秒级推理的策略**，能在风场突变 / 动态障碍出现时**在线重规划**。
+—— 不与 NSGA-II 正面比最优性（比不过，也没必要），只比**实时性**这一个独立维度。
+
+---
+
+## 二、快速开始
+
+```bash
+cd ~/evtol/evtol_rl
+
+# 第 0 步：自测环境（只需要 numpy）
+python evtol_env.py
+
+# 第 1 周验收物：随机策略 gif（只需要 numpy + matplotlib）
+pip install numpy matplotlib
+python render_random.py --map map_dense.json     # ← 建议用 dense：standard 上"直飞"就能赢
+python render_random.py --no-profile             # 对照：关掉剖面，可看出取巧解的存在
+
+# 第 2 周：训练
+pip install gymnasium stable-baselines3 tensorboard
+python train_ppo.py --timesteps 1000000
+tensorboard --logdir runs/
+
+# 第 3 周：与基线对比（用原项目自己的评估器打分，同一把尺子）
+python baseline_compare.py --timing
+```
+
+---
+
+## 三、目录
+
+```
+evtol_rl/
+├── config.py            # 所有可调参数（只改这里，别在别处硬编码）
+├── evtol_env.py         # ★ 核心：Gymnasium 环境
+├── render_random.py     # 第 1 周：随机策略 gif
+├── train_ppo.py         # 第 2 周：PPO 训练 + 评估
+├── baseline_compare.py  # 第 3 周：与 A*/NSGA-II 同表对比
+└── requirements.txt
+```
+
+---
+
+## 四、复用了原项目的什么（不用自己写物理）
+
+| 用途 | 来源 | 调用方式 |
+|---|---|---|
+| 地图 | `map_standard.json` 等 | `load_map()`（本目录，格式与原项目一致） |
+| 单步能耗 | `evtol_high_fidelity_energy` | `env.step_power(p0, p1)['P_total_w']` |
+| 风场 | `evtol_path_planning_v4.WindField` | `env.wind_cost(direction)` |
+| **国标飞行剖面** | **`evtol_v7.FlightProfile`** | ✅ **已接入** → `env.allowed_height_range()` / `env.height_violation()` / 观测第 [4:6] 维 |
+| 噪声 | `evtol_noise_model_improved` | 见 `evtol_env.py` 的 NOTE（需要传入 map 对象） |
+| 段级风险 | `CollisionRiskModel` / `GroundRiskModel` | 见 `evtol_env.py` 的 NOTE |
+| 基线评估 | `evtol_v7.PathEvaluator` | `baseline_compare.py` |
+
+**关键工程决策（为什么不用原项目的 grid）**
+
+原项目 `CityEnvironment.grid` 是 `np.zeros((2500, 2500, 200), uint8)` ≈ **1.25 GB**，
+`expand_with_safety_margin()` 还会**再整份复制一份**。
+
+RL 训练动辄百万步，这条路走不通。本目录改用两级索引：
+
+1. `column_height[x, y]`：该列最高建筑高度（float32，**25 MB**）→ O(1) 快速剔除
+2. `cell_index[(cx, cy)]`：100 m 粗网格 → 建筑下标列表 → 精确 AABB 判定
+
+功能等价（保守性与原 grid 一致），内存降到 1/50。
+
+**国标飞行剖面已接入（`evtol_v7.FlightProfile`）**
+
+| 航段 | 判据 | 允许高度带 |
+|---|---|---|
+| 爬升 climb | 距起点 < 500 m | `min_h` 自起点高度线性升至 120 m，上界 180 m |
+| 巡航 cruise | 其余 | **120 – 180 m** |
+| 进近 approach | 距终点 < 500 m | `min_h` 自 120 m 线性降至终点高度，上界 180 m |
+
+接入方式是**软硬双轨**：
+
+- **软惩罚**：每步按 `height_violation_m × height_penalty` 扣分（有梯度，可学）
+- **硬终止**：超出允许带 > `height_hard_limit`（默认 10 m）→ `terminated`，`reason="height_violation"`
+
+并且把 `[当前高度, min_h, max_h]` 一并放进观测（第 [3]、[4]、[5] 维）——
+**不把合规带告诉智能体，约束就是一个学不会的盲约束。**
+
+> 接入的意义：本图最高楼 150 m 而场景 `size_z=200`。
+> 若不接约束，智能体爬到 190 m 就能掠过所有楼顶直飞，避障形同虚设；
+> 接入后 190 m > `cruise_max=180` 属违规（已实测确认），
+> **"合规高度带内完成航迹"** 才成为真正的技术内核——
+> 也正是所引文献 TEeVTOL 指出的缺口。
+
+---
+
+## 五、⚠️ 你必须自己填的部分
+
+`evtol_env.py` 里标了 **`[TODO-DESIGN]`** 的两处。**这是整个项目最值钱的地方。**
+
+### 1. 奖励函数 `_compute_reward()`
+当前是"能跑但没含量"的占位实现（距离 shaping + 到达/碰撞终端 + 步惩罚 + 高度违规软惩罚）。
+可调用的现成接口已在代码注释里列出（能耗 / 风阻 / 噪声 / 约束 / 离楼距离 / 国标高度带）。
+**注**：高度违规的软惩罚已给好（第 ④ 项），但"不违规却贴边飞也要罚"这类**安全裕度项**仍属你的设计空间。
+
+### 2. 终止条件 `_check_done()`
+已实现 `arrived` / `collision` / **`height_violation`**（本轮接入）/ `timeout`。
+留给你的一种：`energy_out`（电量耗尽，需引入 SOC 状态量 + 电池模型）。
+阈值（`goal_radius_h/v`、`max_steps`、`height_hard_limit`）目前是占位常数，合理性要你自己论证。
+
+### 3. 观测设计 `_get_obs()`（共 **70** 维）
+相对目标(3) + 自身高度(1) + **允许高度带 [min_h, max_h] (2)** + 局部最高建筑高度图(8×8=64)。
+其中允许高度带是接入 FlightProfile 时补上的。
+**还够不够用？需不需要加风速、剩余电量、离楼距离、剩余步数？** 这是要你自己论证的。
+
+---
+
+## 六、踩过的坑（省你几天）
+
+| 坑 | 说明 |
+|---|---|
+| **`DynamicEnvironment.is_safe()` 有轴混淆 bug** | 它用 `building.width` 当 X 范围、`building.length` 当 Y 范围，与原项目 grid 构建口径**相反**。本目录不沿用该实现。 |
+| **建筑字段口径** | `length` 对应 **X** 方向，`width` 对应 **Y** 方向（与原项目 `grid[x:x+length, y:y+width]` 一致）。 |
+| **单步位移必须做线段采样** | stride=25 m 而建筑边长最小 20 m，不采样会直接穿墙。`check_step=5` 是默认值。 |
+| **能耗接口是"路径级"** | 但原实现内部逐段循环调 `calculate_power()`，所以单段可安全拆出（`env.step_power()`）。 |
+| **巡航高度是硬约束**（已接入） | 国标巡航段 120–180 m。已接 `FlightProfile`：越带按米扣分，超 10 m 判 `height_violation` 终止。 |
+| **`FlightProfile` 的 `max_h` 恒为 180** | 爬升段与进近段的 `max_h` 都是 `cruise_max`，不随位置变化；只有下界 `min_h` 会线性变化。别假设两侧都在动。 |
+| **高度被 stride 离散化** | stride=25 m 时高度只能取 80/105/130/155/180 m。**155 m 距终点 100 m 差 55 m > `goal_radius_v`=50，永远判不了 arrived** —— 测 140 m"超时"就是这个原因，不是被楼挡。 |
+
+### ⚠️ 已知问题：地图稀疏，存在"贴高度直飞"的平凡解（✅ 已解决 2026-10-27）
+
+**决策：默认地图已切换为 `map_dense.json`（config.py），stride 先保持 25 m。**
+
+依据（`run_baselines.py` 在 map_dense 上的实测，3 seeds 一致）：
+
+| 基线策略 | 结果 | 能耗 | 含义 |
+|---|---|---|---|
+| 随机策略 | 1–17 步撞楼/违规终止 | — | 环境有真实难度 |
+| 不爬升直飞（80 m） | 6 步 height_violation | 0.105 kWh | 高度带约束生效 |
+| 爬升→130 m 直飞 | **95 步撞楼（剩 529 m）** | 1.630 kWh | "贴巡航下限直飞"平凡解被彻底封死 |
+| 爬升→155 m 直飞 | **200 步超时（差 55.1 m）** | 3.480 kWh | 卡在进近段不下降（Δz=55 > goal_radius_v=50） |
+
+→ naive 策略在 dense 图上**不再能通关**；RL 及格线 = 学会"巡航 155 m + 进近段下降"。
+→ 155 m 直飞差 55 m 到达的失败模式，正好是给 RL 留的改进空间，也是面试里
+   "你的策略比傻瓜基线好在哪"的现成证据。
+
+旧图对照表（固定高度直飞，保留作参考）：
+
+| 地图 | 建筑数 | 125 m | 130 m | 140 m |
+|---|---|---|---|---|
+| `map_standard.json` | 250 | ✅ 到达 | ✅ 到达 | ⏱ 超时 |
+| `map_zigzag.json` | 300 | ✅ 到达 | ✅ 到达 | ✅ 到达 |
+| `map_dense.json` | 344 | ❌ 撞楼 | ❌ 撞楼 | ⏱ 超时 |
+| `map_corner.json` | 280 | ❌ 撞楼 | ❌ 撞楼 | ✅ 到达 |
+| `map_sparse.json` | 120 | ❌ 撞楼 | ❌ 撞楼 | ⏱ 超时 |
+
+备选手段（若 dense 训练仍不收敛再启用）：
+1. 改项目定位为"比谁的能耗/噪声更低"（130 m 直飞 1.980 kWh 作人类基线，standard 图口径）；
+2. stride 25 → 12.5 m（分辨率变细，episode 翻倍）。
+---
+
+## 七、三周计划（对应简历那一条）
+
+| 周 | 做什么 | **必须留下的证据** |
+|---|---|---|
+| **1** | 环境跑通 + 随机策略 | 环境代码 + `random_policy.gif` |
+| **2** | PPO 训练到收敛 | **训练曲线**（reward vs steps）+ 成功率数字 |
+| **3** | 基线对比 + 文档 | **对比表**（RL vs A\* vs NSGA-II）+ 推理耗时 + README |
+| 11 月起 | 边投简历边做进阶（多智能体 / 动态障碍） | 胜率曲线、在线重规划演示 |
+
+**关键节点是第 2 周末**：必须有一条像样的训练曲线。面试官只认这个。
+
+---
+
+## 八、面试四问（边做边把答案写进这里）
+
+1. **环境为什么这样设计？** （观测为什么是这几维？stride 为什么取 25 m？）
+   →
+2. **奖励函数改了几版？为什么改？** （要能讲出"第一版太稀疏、多少步不收敛"这类过程）
+   →
+3. **训练不收敛时怎么排查的？** （← 这一问的可信度最高，因为编不出来）
+   →
+4. **与传统控制方法比好在哪？** （答案：在线实时性，17.19 s → 毫秒级）
+   →
+
+---
+
+## 九、当前状态
+
+- [x] 目录搭建、接口摸底、环境骨架
+- [x] **国标飞行剖面（`FlightProfile`）接入** —— 软惩罚 + 硬终止 + 观测可见性，已实测验证
+- [ ] 第 1 周：跑通 `render_random.py` 出 gif
+- [ ] 第 2 周：PPO 训练出曲线
+- [ ] 第 3 周：基线对比表
+- [ ] **待决策**：换地图 / 改项目定位 / 减小 stride（见"已知问题"）
+
+---
+
+## 八、Phase 2 路线图（2026-10-27 定）：ROS 2 接入
+
+**前置条件：PPO 在 map_dense 上稳定通关（成功率 ≥80%，50 episodes 评估）之前，不做本节。**
+
+| 步骤 | 内容 | 产出 |
+|---|---|---|
+| P2-1 | 策略导出：SB3 PPO → ONNX（`onnx.export`，obs 70 维 float32） | `policy.onnx` |
+| P2-2 | rclpy 节点化：`wind_obstacle_publisher`（风场/障碍状态）+ `evtol_planner_node`（onnxruntime 推理，动作→Twist/位姿指令） | 2 个 node + launch 文件 |
+| P2-3 | RViz 可视化轨迹 + rosbag 录制一次完整 episode | 演示录屏 / rosbag |
+| P2-4 | （可选）Gazebo + PX4 SITL 接入，用多旋翼模型近似 eVTOL | 真物理在环演示 |
+
+工程环境：原生 Linux（主机 4070 台式机 Ubuntu）——ROS 2 官方只认真支持 Linux，
+Windows/WSL 跑 Gazebo 是二等公民。基础 ROS 2 功课（topic/service/TF/colcon）
+先在「视觉竞技A ROS 2 迁移」项目里练熟，再回来做本节，两个项目不重复劳动。
+
+诚实边界：Phase 2 是**部署层**工作，写简历时表述为
+"将训练好的策略以 ONNX 形式部署到 ROS 2 节点"，不夸大为"机器人系统开发"。

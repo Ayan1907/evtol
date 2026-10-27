@@ -1,0 +1,46 @@
+{
+  "algorithm": "V7 vs Standard A*",
+  "timestamp": "2026-04-23 18:53:50",
+  "astar": {
+    "path_length": 2787.005768508883,
+    "efficiency": 98.94907566348459,
+    "avg_height": 80.0,
+    "height_range": [
+      80.0,
+      80.0
+    ],
+    "guobiao_compliance": 0.0,
+    "energy": 3.393502884254442,
+    "time": 55.74011537017766,
+    "noise_score": 30.0,
+    "safety_score": 98.36278419817259,
+    "safety_risk": 0.1637215801827405,
+    "planning_time": 0.20000076293945312,
+    "n_nodes": 41
+  },
+  "v7": {
+    "path_length": 2838.3667169191326,
+    "efficiency": 99.64981296765869,
+    "avg_height": 139.98513888888888,
+    "height_range": [
+      100,
+      162.0
+    ],
+    "guobiao_compliance": 100.0,
+    "energy": 4.139183358459566,
+    "time": 56.76733433838265,
+    "noise_score": 50.0,
+    "safety_score": 99.48289925564517,
+    "safety_risk": 0.05171007443548363,
+    "planning_time": 22.66972255706787,
+    "n_nodes": 12,
+    "pareto_solutions": 20,
+    "hypervolume": 176037.20535424512
+  },
+  "comparison": {
+    "v7_overall_score": 65.0,
+    "astar_overall_score": 35.0,
+    "v7_improvement": 30.0,
+    "v7_improvement_pct": 85.71428571428572
+  }
+}

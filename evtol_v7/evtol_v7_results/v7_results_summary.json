@@ -1,0 +1,97 @@
+{
+  "version": "V7",
+  "timestamp": "2026-04-18 13:00:28",
+  "optimization": {
+    "n_solutions": 6,
+    "hypervolume": 125977081.1041412,
+    "spacing": 16.096164760486193,
+    "reference_point": [
+      34.3353769379783,
+      322.8171235490019,
+      105.44381976051643,
+      0.11139999999999999,
+      16140.856177450096
+    ]
+  },
+  "best_by_objective": {
+    "best_energy": {
+      "id": 3,
+      "objectives": {
+        "energy": 1.8734685857799018,
+        "time": 56.570113819077996,
+        "noise": 82.66669136736742,
+        "safety": 0.05916666666666666,
+        "length": 2828.5056909539
+      },
+      "path_length_nodes": 10
+    },
+    "best_time": {
+      "id": 1,
+      "objectives": {
+        "energy": 1.9746299971960026,
+        "time": 56.56995669080895,
+        "noise": 82.66669136736742,
+        "safety": 0.05916666666666666,
+        "length": 2828.4978345404475
+      },
+      "path_length_nodes": 10
+    },
+    "best_noise": {
+      "id": 6,
+      "objectives": {
+        "energy": 3.565737127069008,
+        "time": 61.22916156038517,
+        "noise": 77.28699301010654,
+        "safety": 0.01,
+        "length": 3061.4580780192587
+      },
+      "path_length_nodes": 10
+    },
+    "best_safety": {
+      "id": 6,
+      "objectives": {
+        "energy": 3.565737127069008,
+        "time": 61.22916156038517,
+        "noise": 77.28699301010654,
+        "safety": 0.01,
+        "length": 3061.4580780192587
+      },
+      "path_length_nodes": 10
+    },
+    "best_length": {
+      "id": 1,
+      "objectives": {
+        "energy": 1.9746299971960026,
+        "time": 56.56995669080895,
+        "noise": 82.66669136736742,
+        "safety": 0.05916666666666666,
+        "length": 2828.4978345404475
+      },
+      "path_length_nodes": 10
+    }
+  },
+  "uncertainty": {
+    "energy": {
+      "mean": 2.451583431287194,
+      "std": 0.015959308029493836,
+      "min": 2.4437485633902614,
+      "max": 2.5566808331954762,
+      "p5": 2.4437485633902614,
+      "p95": 2.4904878886070083
+    },
+    "time": {
+      "mean": 65.86859879275829,
+      "std": 0.3705045745439103,
+      "min": 65.67520416035217,
+      "max": 67.47566882949305
+    },
+    "n_successful": 200,
+    "n_samples": 200,
+    "risk_assessment": {
+      "energy_exceed_prob": 0.0,
+      "time_exceed_prob": 0.0,
+      "energy_coefficient_variation": 0.0065097960060508595,
+      "time_coefficient_variation": 0.005624904451203298
+    }
+  }
+}

@@ -1,0 +1,1285 @@
+{
+  "project": "Hong Kong eVTOL Path Planning",
+  "description": "Five Hong Kong regions with different building densities for eVTOL path planning",
+  "date": "2026-03-14",
+  "parameters": {
+    "area_size": "2500×2100m",
+    "safety_margin": "17m",
+    "flight_height": "80-100m",
+    "algorithm": "A* search with continuous coordinates"
+  },
+  "regions": [
+    {
+      "id": 0,
+      "name_cn": "大埔（稀疏）",
+      "name_en": "Tai Po (Sparse)",
+      "data_file": "hk_target_2500.json",
+      "image_file": "hk_tai_po_sparse_result.png",
+      "region_data": {
+        "region_name": "大埔 (Tai Po)",
+        "size_m": 2500,
+        "count": 155,
+        "density": 24.8,
+        "density_rank": "稀疏 (Sparse)"
+      },
+      "coordinate_system": {
+        "utm_min_x": 516250,
+        "utm_max_x": 518750,
+        "utm_min_y": 51697,
+        "utm_max_y": 54197,
+        "offset_x": 516250,
+        "offset_y": 51697
+      },
+      "buildings": {
+        "total": 155,
+        "sample_data": [
+          {
+            "center_x": 518668.51940000046,
+            "center_y": 53023.04609999985,
+            "min_x": 518658.51940000046,
+            "max_x": 518678.51940000046,
+            "min_y": 53013.04609999985,
+            "max_y": 53033.04609999985,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "house"
+            },
+            "local_x": 2418.519400000456,
+            "local_y": 1326.0460999998468,
+            "local_min_x": 2408.519400000456,
+            "local_max_x": 2428.519400000456,
+            "local_min_y": 1316.0460999998468,
+            "local_max_y": 1336.0460999998468
+          },
+          {
+            "center_x": 518557.67600000027,
+            "center_y": 53237.720100000086,
+            "min_x": 518547.67600000027,
+            "max_x": 518567.67600000027,
+            "min_y": 53227.720100000086,
+            "max_y": 53247.720100000086,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "house"
+            },
+            "local_x": 2307.6760000002687,
+            "local_y": 1540.720100000086,
+            "local_min_x": 2297.6760000002687,
+            "local_max_x": 2317.6760000002687,
+            "local_min_y": 1530.720100000086,
+            "local_max_y": 1550.720100000086
+          },
+          {
+            "center_x": 518541.33560000063,
+            "center_y": 53265.003899999894,
+            "min_x": 518531.33560000063,
+            "max_x": 518551.33560000063,
+            "min_y": 53255.003899999894,
+            "max_y": 53275.003899999894,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "roof"
+            },
+            "local_x": 2291.3356000006315,
+            "local_y": 1568.0038999998942,
+            "local_min_x": 2281.3356000006315,
+            "local_max_x": 2301.3356000006315,
+            "local_min_y": 1558.0038999998942,
+            "local_max_y": 1578.0038999998942
+          },
+          {
+            "center_x": 518306.6233999995,
+            "center_y": 51855.09299999993,
+            "min_x": 518296.6233999995,
+            "max_x": 518316.6233999995,
+            "min_y": 51845.09299999993,
+            "max_y": 51865.09299999993,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "yes",
+              "name": "鳳園自然及文化教育中心 Fung Yuen Nature and Culture Education Centre",
+              "name:en": "Fung Yuen Nature and Culture Education Centre",
+              "name:zh": "鳳園自然及文化教育中心"
+            },
+            "local_x": 2056.6233999995166,
+            "local_y": 158.092999999928,
+            "local_min_x": 2046.6233999995166,
+            "local_max_x": 2066.6233999995166,
+            "local_min_y": 148.092999999928,
+            "local_max_y": 168.092999999928
+          },
+          {
+            "center_x": 518532.36979999946,
+            "center_y": 53258.321699999884,
+            "min_x": 518522.36979999946,
+            "max_x": 518542.36979999946,
+            "min_y": 53248.321699999884,
+            "max_y": 53268.321699999884,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "yes"
+            },
+            "local_x": 2282.369799999462,
+            "local_y": 1561.321699999884,
+            "local_min_x": 2272.369799999462,
+            "local_max_x": 2292.369799999462,
+            "local_min_y": 1551.321699999884,
+            "local_max_y": 1571.321699999884
+          },
+          {
+            "center_x": 518534.91980000027,
+            "center_y": 53255.44679999981,
+            "min_x": 518524.91980000027,
+            "max_x": 518544.91980000027,
+            "min_y": 53245.44679999981,
+            "max_y": 53265.44679999981,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "yes"
+            },
+            "local_x": 2284.9198000002652,
+            "local_y": 1558.4467999998087,
+            "local_min_x": 2274.9198000002652,
+            "local_max_x": 2294.9198000002652,
+            "local_min_y": 1548.4467999998087,
+            "local_max_y": 1568.4467999998087
+          },
+          {
+            "center_x": 518537.5514000006,
+            "center_y": 53252.449799999886,
+            "min_x": 518527.5514000006,
+            "max_x": 518547.5514000006,
+            "min_y": 53242.449799999886,
+            "max_y": 53262.449799999886,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "yes"
+            },
+            "local_x": 2287.5514000005787,
+            "local_y": 1555.4497999998857,
+            "local_min_x": 2277.5514000005787,
+            "local_max_x": 2297.5514000005787,
+            "local_min_y": 1545.4497999998857,
+            "local_max_y": 1565.4497999998857
+          },
+          {
+            "center_x": 518538.1735999999,
+            "center_y": 53243.35890000012,
+            "min_x": 518528.1735999999,
+            "max_x": 518548.1735999999,
+            "min_y": 53233.35890000012,
+            "max_y": 53253.35890000012,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "yes"
+            },
+            "local_x": 2288.173599999922,
+            "local_y": 1546.358900000123,
+            "local_min_x": 2278.173599999922,
+            "local_max_x": 2298.173599999922,
+            "local_min_y": 1536.358900000123,
+            "local_max_y": 1556.358900000123
+          },
+          {
+            "center_x": 518521.1803999999,
+            "center_y": 53247.832199999946,
+            "min_x": 518511.1803999999,
+            "max_x": 518531.1803999999,
+            "min_y": 53237.832199999946,
+            "max_y": 53257.832199999946,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "yes"
+            },
+            "local_x": 2271.1803999998956,
+            "local_y": 1550.8321999999462,
+            "local_min_x": 2261.1803999998956,
+            "local_max_x": 2281.1803999998956,
+            "local_min_y": 1540.8321999999462,
+            "local_max_y": 1560.8321999999462
+          },
+          {
+            "center_x": 518530.6051999999,
+            "center_y": 53249.31959999998,
+            "min_x": 518520.6051999999,
+            "max_x": 518540.6051999999,
+            "min_y": 53239.31959999998,
+            "max_y": 53259.31959999998,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "ruins"
+            },
+            "local_x": 2280.6051999998745,
+            "local_y": 1552.3195999999807,
+            "local_min_x": 2270.6051999998745,
+            "local_max_x": 2290.6051999998745,
+            "local_min_y": 1542.3195999999807,
+            "local_max_y": 1562.3195999999807
+          }
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "name_cn": "大埔（密集）",
+      "name_en": "Tai Po (Dense)",
+      "data_file": "hk_大埔_dense.json",
+      "image_file": "hk_tai_po_dense_result.png",
+      "region_data": {
+        "region_name": "大埔 (Dense)",
+        "size_m": 2500,
+        "count": 489,
+        "density": 78.24,
+        "density_rank": "中等密度 (Medium)"
+      },
+      "coordinate_system": {
+        "utm_min_x": 515750,
+        "utm_max_x": 518250,
+        "utm_min_y": 52697,
+        "utm_max_y": 55197,
+        "offset_x": 515750,
+        "offset_y": 52697
+      },
+      "buildings": {
+        "total": 489,
+        "sample_data": [
+          {
+            "center_x": 517260.1951999996,
+            "center_y": 55163.81429999983,
+            "min_x": 517250.1951999996,
+            "max_x": 517270.1951999996,
+            "min_y": 55153.81429999983,
+            "max_y": 55173.81429999983,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "amenity": "toilets",
+              "building": "yes",
+              "changing_table": "no",
+              "operator": "AFCD",
+              "toilets:disposal": "pitlatrine"
+            },
+            "local_x": 1510.195199999609,
+            "local_y": 2466.814299999831,
+            "local_min_x": 1500.195199999609,
+            "local_max_x": 1520.195199999609,
+            "local_min_y": 2456.814299999831,
+            "local_max_y": 2476.814299999831
+          },
+          {
+            "center_x": 516009.1040000004,
+            "center_y": 55188.75599999987,
+            "min_x": 515999.1040000004,
+            "max_x": 516019.1040000004,
+            "min_y": 55178.75599999987,
+            "max_y": 55198.75599999987,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "temple",
+              "name": "觀音殿",
+              "name:yue": "觀音殿"
+            },
+            "local_x": 259.10400000039954,
+            "local_y": 2491.7559999998703,
+            "local_min_x": 249.10400000039954,
+            "local_max_x": 269.10400000039954,
+            "local_min_y": 2481.7559999998703,
+            "local_max_y": 2501.7559999998703
+          },
+          {
+            "center_x": 516344.58199999994,
+            "center_y": 53500.112999999954,
+            "min_x": 516334.58199999994,
+            "max_x": 516354.58199999994,
+            "min_y": 53490.112999999954,
+            "max_y": 53510.112999999954,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "house",
+              "building:levels": "3"
+            },
+            "local_x": 594.5819999999367,
+            "local_y": 803.1129999999539,
+            "local_min_x": 584.5819999999367,
+            "local_max_x": 604.5819999999367,
+            "local_min_y": 793.1129999999539,
+            "local_max_y": 813.1129999999539
+          },
+          {
+            "center_x": 516278.0882000005,
+            "center_y": 53502.67709999995,
+            "min_x": 516268.0882000005,
+            "max_x": 516288.0882000005,
+            "min_y": 53492.67709999995,
+            "max_y": 53512.67709999995,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "addr:housenumber": "195",
+              "addr:place": "九龍坑村 Kau Lung Hang Village",
+              "addr:place:en": "Kau Lung Hang Village",
+              "addr:place:zh": "九龍坑村",
+              "building": "house",
+              "building:levels": "3"
+            },
+            "local_x": 528.0882000005222,
+            "local_y": 805.6770999999499,
+            "local_min_x": 518.0882000005222,
+            "local_max_x": 538.0882000005222,
+            "local_min_y": 795.6770999999499,
+            "local_max_y": 815.6770999999499
+          },
+          {
+            "center_x": 516327.3439999999,
+            "center_y": 53517.62879999998,
+            "min_x": 516317.3439999999,
+            "max_x": 516337.3439999999,
+            "min_y": 53507.62879999998,
+            "max_y": 53527.62879999998,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "house"
+            },
+            "local_x": 577.3439999999246,
+            "local_y": 820.6287999999768,
+            "local_min_x": 567.3439999999246,
+            "local_max_x": 587.3439999999246,
+            "local_min_y": 810.6287999999768,
+            "local_max_y": 830.6287999999768
+          },
+          {
+            "center_x": 516514.2692,
+            "center_y": 53338.1306999999,
+            "min_x": 516504.2692,
+            "max_x": 516524.2692,
+            "min_y": 53328.1306999999,
+            "max_y": 53348.1306999999,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "house"
+            },
+            "local_x": 764.2691999999806,
+            "local_y": 641.1306999998997,
+            "local_min_x": 754.2691999999806,
+            "local_max_x": 774.2691999999806,
+            "local_min_y": 631.1306999998997,
+            "local_max_y": 651.1306999998997
+          },
+          {
+            "center_x": 516236.62519999937,
+            "center_y": 52878.99029999988,
+            "min_x": 516226.62519999937,
+            "max_x": 516246.62519999937,
+            "min_y": 52868.99029999988,
+            "max_y": 52888.99029999988,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "house"
+            },
+            "local_x": 486.6251999993692,
+            "local_y": 181.99029999988124,
+            "local_min_x": 476.6251999993692,
+            "local_max_x": 496.6251999993692,
+            "local_min_y": 171.99029999988124,
+            "local_max_y": 191.99029999988124
+          },
+          {
+            "center_x": 517243.89560000045,
+            "center_y": 52819.993800000164,
+            "min_x": 517233.89560000045,
+            "max_x": 517253.89560000045,
+            "min_y": 52809.993800000164,
+            "max_y": 52829.993800000164,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "service",
+              "operator": "Hong Kong Telecom",
+              "operator:website": "https://hkt.com",
+              "operator:wikidata": "Q5895075"
+            },
+            "local_x": 1493.8956000004546,
+            "local_y": 122.9938000001639,
+            "local_min_x": 1483.8956000004546,
+            "local_max_x": 1503.8956000004546,
+            "local_min_y": 112.9938000001639,
+            "local_max_y": 132.9938000001639
+          },
+          {
+            "center_x": 517222.9040000001,
+            "center_y": 52826.9646,
+            "min_x": 517212.9040000001,
+            "max_x": 517232.9040000001,
+            "min_y": 52816.9646,
+            "max_y": 52836.9646,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "yes"
+            },
+            "local_x": 1472.9040000000969,
+            "local_y": 129.96459999999934,
+            "local_min_x": 1462.9040000000969,
+            "local_max_x": 1482.9040000000969,
+            "local_min_y": 119.96459999999934,
+            "local_max_y": 139.96459999999934
+          },
+          {
+            "center_x": 517217.64079999947,
+            "center_y": 52834.5237,
+            "min_x": 517207.64079999947,
+            "max_x": 517227.64079999947,
+            "min_y": 52824.5237,
+            "max_y": 52844.5237,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "yes"
+            },
+            "local_x": 1467.64079999947,
+            "local_y": 137.52369999999792,
+            "local_min_x": 1457.64079999947,
+            "local_max_x": 1477.64079999947,
+            "local_min_y": 127.52369999999792,
+            "local_max_y": 147.52369999999792
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name_cn": "大埔（完整）",
+      "name_en": "Tai Po (Full)",
+      "data_file": "hk_大埔_buildings.json",
+      "image_file": "hk_tai_po_full_result.png",
+      "region_data": {
+        "region_name": "大埔",
+        "size_m": 2500,
+        "count": 10013,
+        "density": 155.80921325947745,
+        "density_rank": "超高密度 (Very High Density)"
+      },
+      "coordinate_system": {
+        "utm_min_x": 515250.8013999998,
+        "utm_max_x": 523473.50879999937,
+        "utm_min_y": 47697.61739999992,
+        "utm_max_y": 55513.10800000004,
+        "offset_x": 515250.8013999998,
+        "offset_y": 47697.61739999992
+      },
+      "buildings": {
+        "total": 10013,
+        "sample_data": [
+          {
+            "center_x": 516492.4820000005,
+            "center_y": 50538.64409999981,
+            "min_x": 516482.4820000005,
+            "max_x": 516502.4820000005,
+            "min_y": 50528.64409999981,
+            "max_y": 50548.64409999981,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "grandstand",
+              "building:levels": "1"
+            }
+          },
+          {
+            "center_x": 516554.4776000002,
+            "center_y": 50633.80440000019,
+            "min_x": 516544.4776000002,
+            "max_x": 516564.4776000002,
+            "min_y": 50623.80440000019,
+            "max_y": 50643.80440000019,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "grandstand",
+              "building:levels": "1"
+            }
+          },
+          {
+            "center_x": 519939.11299999995,
+            "center_y": 47845.02929999987,
+            "min_x": 519929.11299999995,
+            "max_x": 519949.11299999995,
+            "min_y": 47835.02929999987,
+            "max_y": 47855.02929999987,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "amenity": "school",
+              "building": "yes"
+            }
+          },
+          {
+            "center_x": 518006.8862000002,
+            "center_y": 50755.76010000019,
+            "min_x": 517994.3862000002,
+            "max_x": 518019.3862000002,
+            "min_y": 50740.76010000019,
+            "max_y": 50770.76010000019,
+            "width": 25,
+            "height": 30,
+            "tags": {
+              "addr:housenumber": "61",
+              "addr:street": "Ting Kok Road",
+              "building": "apartments",
+              "name": "樂賢居 Riviera Lodge",
+              "name:en": "Riviera Lodge",
+              "name:yue": "樂賢居",
+              "name:zh": "樂賢居"
+            }
+          },
+          {
+            "center_x": 516983.57119999937,
+            "center_y": 49523.66009999991,
+            "min_x": 516973.57119999937,
+            "max_x": 516993.57119999937,
+            "min_y": 49513.66009999991,
+            "max_y": 49533.66009999991,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "addr:housenumber": "8",
+              "addr:street": "鄉事會街 Heung Sze Wui Street",
+              "building": "civic",
+              "building:levels": "2",
+              "layer": "1",
+              "name": "大埔綜合大樓 Tai Po Complex",
+              "name:en": "Tai Po Complex",
+              "name:yue": "大埔綜合大樓",
+              "name:zh": "大埔綜合大樓",
+              "wikipedia": "zh:大埔綜合大樓"
+            }
+          },
+          {
+            "center_x": 516771.10519999947,
+            "center_y": 49834.626599999945,
+            "min_x": 516761.10519999947,
+            "max_x": 516781.10519999947,
+            "min_y": 49824.626599999945,
+            "max_y": 49844.626599999945,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "amenity": "place_of_worship",
+              "building": "yes",
+              "name": "文武二帝廟 Man Mo Yee Tai Temple",
+              "name:en": "Man Mo Yee Tai Temple",
+              "name:yue": "文武二帝廟",
+              "name:zh": "文武二帝廟",
+              "religion": "taoist",
+              "wikidata": "Q11079993",
+              "wikimedia_commons": "Category:Man Mo Temple, Tai Po",
+              "wikipedia": "zh:文武二帝廟"
+            }
+          },
+          {
+            "center_x": 516378.5989999996,
+            "center_y": 50060.44499999988,
+            "min_x": 516368.5989999996,
+            "max_x": 516388.5989999996,
+            "min_y": 50050.44499999988,
+            "max_y": 50070.44499999988,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "yes",
+              "building:levels": "4",
+              "layer": "2",
+              "leisure": "sports_centre",
+              "name": "太和體育館 Tai Wo Sports Centre",
+              "name:en": "Tai Wo Sports Centre",
+              "name:yue": "太和體育館",
+              "name:zh": "太和體育館",
+              "wikidata": "Q86957329",
+              "wikimedia_commons": "Category:Tai Wo Sports Centre"
+            }
+          },
+          {
+            "center_x": 516537.9944000004,
+            "center_y": 50069.44710000018,
+            "min_x": 516525.4944000004,
+            "max_x": 516550.4944000004,
+            "min_y": 50054.44710000018,
+            "max_y": 50084.44710000018,
+            "width": 25,
+            "height": 30,
+            "tags": {
+              "building": "apartments",
+              "building:levels": "22",
+              "name": "愛和樓 Oi Wo House",
+              "name:en": "Oi Wo House",
+              "name:yue": "愛和樓",
+              "name:zh": "愛和樓"
+            }
+          },
+          {
+            "center_x": 516463.26919999975,
+            "center_y": 50144.23889999993,
+            "min_x": 516450.76919999975,
+            "max_x": 516475.76919999975,
+            "min_y": 50129.23889999993,
+            "max_y": 50159.23889999993,
+            "width": 25,
+            "height": 30,
+            "tags": {
+              "building": "apartments",
+              "building:levels": "35",
+              "name": "喜和樓 Hei Wo House",
+              "name:en": "Hei Wo House",
+              "name:zh": "喜和樓"
+            }
+          },
+          {
+            "center_x": 516330.2,
+            "center_y": 50011.33860000019,
+            "min_x": 516317.7,
+            "max_x": 516342.7,
+            "min_y": 49996.33860000019,
+            "max_y": 50026.33860000019,
+            "width": 25,
+            "height": 30,
+            "tags": {
+              "building": "apartments",
+              "building:levels": "22",
+              "name": "安和樓 On Wo House",
+              "name:en": "On Wo House",
+              "name:zh": "安和樓"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "name_cn": "沙田",
+      "name_en": "Sha Tin",
+      "data_file": "hk_沙田_buildings.json",
+      "image_file": "hk_sha_tin_result.png",
+      "region_data": {
+        "region_name": "沙田",
+        "size_m": 2500,
+        "count": 6204,
+        "density": 121.7350507402562,
+        "density_rank": "高密度 (High Density)"
+      },
+      "coordinate_system": {
+        "utm_min_x": 518294.26720000023,
+        "utm_max_x": 525544.8431999999,
+        "utm_min_y": 42109.74920000011,
+        "utm_max_y": 49138.588900000126,
+        "offset_x": 518294.26720000023,
+        "offset_y": 42109.74920000011
+      },
+      "buildings": {
+        "total": 6204,
+        "sample_data": [
+          {
+            "center_x": 519304.83620000054,
+            "center_y": 42246.57779999987,
+            "min_x": 519294.83620000054,
+            "max_x": 519314.83620000054,
+            "min_y": 42236.57779999987,
+            "max_y": 42256.57779999987,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "amenity": "library",
+              "building": "yes",
+              "layer": "2",
+              "name": "沙田公共圖書館 Sha Tin Public Library",
+              "name:en": "Sha Tin Public Library",
+              "name:zh": "沙田公共圖書館",
+              "opening_hours": "Mo-We,Fr-Sa 09:00-20:00; Th 12:00-20:00; Su 09:00-17:00",
+              "operator": "香港公共圖書館 Hong Kong Public Libraries",
+              "operator:en": "Hong Kong Public Libraries",
+              "operator:short": "HKPL",
+              "operator:type": "government",
+              "operator:wikidata": "Q838662",
+              "operator:zh": "香港公共圖書館",
+              "operator:zh-Hans": "香港公共图书馆",
+              "operator:zh-Hant": "香港公共圖書館",
+              "wheelchair": "yes",
+              "wikidata": "Q7459882",
+              "wikimedia_commons": "Category:Sha Tin Public Library",
+              "wikipedia": "en:Sha Tin Public Library"
+            }
+          },
+          {
+            "center_x": 519371.5747999999,
+            "center_y": 42238.28609999998,
+            "min_x": 519361.5747999999,
+            "max_x": 519381.5747999999,
+            "min_y": 42228.28609999998,
+            "max_y": 42248.28609999998,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "yes",
+              "government": "register_office",
+              "layer": "2",
+              "name": "沙田婚姻登記處 Sha Tin Marriage Registry",
+              "name:en": "Sha Tin Marriage Registry",
+              "name:zh": "沙田婚姻登記處",
+              "office": "government"
+            }
+          },
+          {
+            "center_x": 519285.97639999975,
+            "center_y": 42183.42990000014,
+            "min_x": 519275.97639999975,
+            "max_x": 519295.97639999975,
+            "min_y": 42173.42990000014,
+            "max_y": 42193.42990000014,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "addr:housenumber": "1",
+              "addr:street": "宜正里 Yi Ching Lane",
+              "amenity": "courthouse",
+              "building": "yes",
+              "name": "沙田裁判法院 Sha Tin Magistrates' Courts",
+              "name:en": "Sha Tin Magistrates' Courts",
+              "name:zh": "沙田裁判法院"
+            }
+          },
+          {
+            "center_x": 520233.2503999998,
+            "center_y": 43754.40180000004,
+            "min_x": 520213.2503999998,
+            "max_x": 520253.2503999998,
+            "min_y": 43736.90180000004,
+            "max_y": 43771.90180000004,
+            "width": 40,
+            "height": 35,
+            "tags": {
+              "addr:housenumber": "9",
+              "addr:street": "Lok King Street",
+              "building": "office",
+              "building:levels": "11",
+              "name": "火炭鐵路大樓 Fo Tan Railway House",
+              "name:en": "Fo Tan Railway House",
+              "name:zh": "火炭鐵路大樓",
+              "wikidata": "Q15256756",
+              "wikimedia_commons": "Category:Fo Tan Railway House",
+              "wikipedia": "zh:火炭鐵路大樓"
+            }
+          },
+          {
+            "center_x": 522725.9059999999,
+            "center_y": 45354.35579999989,
+            "min_x": 522715.9059999999,
+            "max_x": 522735.9059999999,
+            "min_y": 45344.35579999989,
+            "max_y": 45364.35579999989,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "addr:suburb": "大水坑 Tai Shui Hang",
+              "addr:suburb:en": "Tai Shui Hang",
+              "addr:suburb:zh": "大水坑",
+              "brand": "港鐵 MTR",
+              "brand:en": "MTR",
+              "brand:zh": "港鐵",
+              "building": "train_station",
+              "building:levels": "2",
+              "building:levels:underground": "1",
+              "name": "大水坑 Tai Shui Hang",
+              "name:en": "Tai Shui Hang",
+              "name:zh": "大水坑",
+              "network": "港鐵 MTR",
+              "network:en": "MTR",
+              "network:wikidata": "Q14751",
+              "network:zh": "港鐵",
+              "network:zh-Hans": "港铁",
+              "network:zh-Hant": "港鐵",
+              "note:station": "subway",
+              "note:train": "yes",
+              "operator": "香港鐵路有限公司 MTR Corporation Limited",
+              "operator:en": "MTR Corporation Limited",
+              "operator:wikidata": "Q1479375",
+              "operator:zh": "香港鐵路有限公司",
+              "operator:zh-Hans": "香港铁路有限公司",
+              "operator:zh-Hant": "香港鐵路有限公司",
+              "owner": "九廣鐵路公司 Kowloon-Canton Railway Corporation",
+              "owner:en": "Kowloon-Canton Railway Corporation",
+              "owner:wikidata": "Q838436",
+              "owner:zh": "九廣鐵路公司",
+              "ownership": "public",
+              "platforms": "2",
+              "public_transport": "station",
+              "railway": "station",
+              "ref": "TSH",
+              "start_date": "2004-12-21",
+              "station": "subway",
+              "subway": "yes",
+              "toilets:wheelchair": "yes",
+              "wheelchair": "yes",
+              "wikidata": "Q839589"
+            }
+          },
+          {
+            "center_x": 523026.7958000003,
+            "center_y": 46343.12159999982,
+            "min_x": 523016.7958000003,
+            "max_x": 523036.7958000003,
+            "min_y": 46333.12159999982,
+            "max_y": 46353.12159999982,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "train_station",
+              "layer": "1",
+              "name": "恆安 Heng On",
+              "name:en": "Heng On",
+              "name:zh": "恆安",
+              "network": "MTR",
+              "operator": "香港鐵路有限公司 MTR Corporation",
+              "platforms": "2",
+              "public_transport": "station",
+              "railway": "station",
+              "ref": "HEO",
+              "start_date": "2004-12-21",
+              "station": "subway",
+              "wheelchair": "yes",
+              "wikidata": "Q841849"
+            }
+          },
+          {
+            "center_x": 524877.6265999998,
+            "center_y": 47633.48549999994,
+            "min_x": 524867.6265999998,
+            "max_x": 524887.6265999998,
+            "min_y": 47623.48549999994,
+            "max_y": 47643.48549999994,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "train_station",
+              "layer": "1",
+              "name": "烏溪沙 Wu Kai Sha",
+              "name:en": "Wu Kai Sha",
+              "name:zh": "烏溪沙",
+              "network": "MTR",
+              "operator": "香港鐵路有限公司 MTR Corporation",
+              "platforms": "2",
+              "public_transport": "station",
+              "railway": "station",
+              "ref": "WKS",
+              "start_date": "2004-12-21",
+              "station": "subway",
+              "wheelchair": "yes",
+              "wikidata": "Q839586"
+            }
+          },
+          {
+            "center_x": 520272.3980000007,
+            "center_y": 43827.251099999965,
+            "min_x": 520262.3980000007,
+            "max_x": 520282.3980000007,
+            "min_y": 43817.251099999965,
+            "max_y": 43837.251099999965,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "yes",
+              "building:levels": "4"
+            }
+          },
+          {
+            "center_x": 519939.11299999995,
+            "center_y": 47845.02929999987,
+            "min_x": 519929.11299999995,
+            "max_x": 519949.11299999995,
+            "min_y": 47835.02929999987,
+            "max_y": 47855.02929999987,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "amenity": "school",
+              "building": "yes"
+            }
+          },
+          {
+            "center_x": 523189.77140000026,
+            "center_y": 47328.368700000035,
+            "min_x": 523179.77140000026,
+            "max_x": 523199.77140000026,
+            "min_y": 47318.368700000035,
+            "max_y": 47338.368700000035,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "hotel",
+              "building:levels": "18"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "name_cn": "荃湾",
+      "name_en": "Tsuen Wan",
+      "data_file": "hk_荃湾_buildings.json",
+      "image_file": "hk_tsuen_wan_result.png",
+      "region_data": {
+        "region_name": "荃湾",
+        "size_m": 2500,
+        "count": 7093,
+        "density": 118.02033683819235,
+        "density_rank": "高密度 (High Density)"
+      },
+      "coordinate_system": {
+        "utm_min_x": 510137.2966000003,
+        "utm_max_x": 518404.74119999935,
+        "utm_min_y": 38778.91670000011,
+        "utm_max_y": 46048.37109999986,
+        "offset_x": 510137.2966000003,
+        "offset_y": 38778.91670000011
+      },
+      "buildings": {
+        "total": 7093,
+        "sample_data": [
+          {
+            "center_x": 511352.3347999998,
+            "center_y": 41163.39539999997,
+            "min_x": 511332.3347999998,
+            "max_x": 511372.3347999998,
+            "min_y": 41145.89539999997,
+            "max_y": 41180.89539999997,
+            "width": 40,
+            "height": 35,
+            "tags": {
+              "addr:city": "荃灣 Tsuen Wan",
+              "addr:housenumber": "4-30",
+              "addr:street": "大壩街",
+              "building": "commercial",
+              "building:levels": "4",
+              "layer": "1",
+              "name": "荃灣廣場 Tsuen Wan Plaza",
+              "name:en": "Tsuen Wan Plaza",
+              "name:zh": "荃灣廣場",
+              "shop": "mall",
+              "wheelchair": "limited",
+              "wikidata": "Q14477796",
+              "wikimedia_commons": "Category:Tsuen Wan Plaza",
+              "wikipedia": "en:Tsuen Wan Plaza"
+            }
+          },
+          {
+            "center_x": 511497.2155999999,
+            "center_y": 41161.38630000016,
+            "min_x": 511487.2155999999,
+            "max_x": 511507.2155999999,
+            "min_y": 41151.38630000016,
+            "max_y": 41171.38630000016,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "addr:housenumber": "72",
+              "addr:street": "大河道 Tai Ho Road",
+              "air_conditioning": "yes",
+              "amenity": "community_centre",
+              "building": "yes",
+              "email": "twth@lcsd.gov.hk",
+              "name": "荃灣大會堂 Tsuen Wan Town Hall",
+              "name:en": "Tsuen Wan Town Hall",
+              "name:zh": "荃灣大會堂",
+              "name:zh-Hans": "荃湾大会堂",
+              "name:zh-Hant": "荃灣大會堂",
+              "phone": "+852 24140144",
+              "start_date": "1980-02-07",
+              "website": "https://www.lcsd.gov.hk/tc/twth/",
+              "wheelchair": "yes",
+              "wikidata": "Q7849948",
+              "wikimedia_commons": "Category:Tsuen Wan Town Hall",
+              "wikipedia": "en:Tsuen Wan Town Hall"
+            }
+          },
+          {
+            "center_x": 512263.07240000047,
+            "center_y": 41295.85170000004,
+            "min_x": 512253.07240000047,
+            "max_x": 512273.07240000047,
+            "min_y": 41285.85170000004,
+            "max_y": 41305.85170000004,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "yes",
+              "fee": "no",
+              "heritage": "2",
+              "historic": "house",
+              "museum": "local",
+              "name": "三棟屋博物館 Sam Tung Uk Museum",
+              "name:en": "Sam Tung Uk Museum",
+              "name:zh": "三棟屋博物館",
+              "opening_hours": "We-Mo 10:00-18:00",
+              "ref:hk": "M0010",
+              "tourism": "museum",
+              "wikidata": "Q7408269",
+              "wikimedia_commons": "Category:Sam Tung Uk",
+              "wikipedia": "zh:三棟屋博物館"
+            }
+          },
+          {
+            "center_x": 511950.5137999999,
+            "center_y": 41220.205200000164,
+            "min_x": 511940.5137999999,
+            "max_x": 511960.5137999999,
+            "min_y": 41210.205200000164,
+            "max_y": 41230.205200000164,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "addr:housename": "荃灣街市 Tsuen Wan Market",
+              "addr:housename:en": "Tsuen Wan Market",
+              "addr:housename:zh": "荃灣街市",
+              "addr:housenumber": "25",
+              "addr:street": "眾安街 Chung On Street",
+              "addr:street:en": "Chung On Street",
+              "addr:street:zh": "眾安街",
+              "addr:suburb": "荃灣市 Tsuen Wan Town",
+              "addr:suburb:en": "Tsuen Wan Town",
+              "addr:suburb:zh": "荃灣市",
+              "addr:town": "荃灣 Tsuen Wan",
+              "addr:town:en": "Tsuen Wan",
+              "addr:town:zh": "荃灣",
+              "amenity": "marketplace",
+              "building": "retail",
+              "building:levels": "2",
+              "landuse": "retail",
+              "name": "荃灣街市 Tsuen Wan Market",
+              "name:en": "Tsuen Wan Market",
+              "name:zh": "荃灣街市",
+              "ownership": "government"
+            }
+          },
+          {
+            "center_x": 517471.1516000007,
+            "center_y": 40308.22920000007,
+            "min_x": 517461.1516000007,
+            "max_x": 517481.1516000007,
+            "min_y": 40298.22920000007,
+            "max_y": 40318.22920000007,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "yes",
+              "building:levels": "3",
+              "layer": "2",
+              "leisure": "sports_centre",
+              "name": "顯徑體育館 Hin Keng Sports Centre",
+              "name:en": "Hin Keng Sports Centre",
+              "name:zh": "顯徑體育館",
+              "wikidata": "Q15942073",
+              "wikimedia_commons": "Category:Hin Keng Sports Centre",
+              "wikipedia": "zh:顯徑體育館"
+            }
+          },
+          {
+            "center_x": 517478.8730000003,
+            "center_y": 40284.11999999989,
+            "min_x": 517468.8730000003,
+            "max_x": 517488.8730000003,
+            "min_y": 40274.11999999989,
+            "max_y": 40294.11999999989,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "building": "retail",
+              "building:levels": "2",
+              "layer": "1",
+              "mall": "yes"
+            }
+          },
+          {
+            "center_x": 518201.6756000001,
+            "center_y": 41408.49450000005,
+            "min_x": 518191.6756000001,
+            "max_x": 518211.6756000001,
+            "min_y": 41398.49450000005,
+            "max_y": 41418.49450000005,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "brand": "港鐵 MTR",
+              "brand:en": "MTR",
+              "brand:zh": "港鐵",
+              "building": "train_station",
+              "building:levels": "2",
+              "layer": "1",
+              "name": "大圍 Tai Wai",
+              "name:en": "Tai Wai",
+              "name:zh": "大圍",
+              "network": "港鐵 MTR",
+              "network:en": "MTR",
+              "network:wikidata": "Q14751",
+              "network:zh": "港鐵",
+              "network:zh-Hans": "港铁",
+              "network:zh-Hant": "港鐵",
+              "note:train": "yes",
+              "operator": "香港鐵路有限公司 MTR Corporation Limited",
+              "operator:en": "MTR Corporation Limited",
+              "operator:wikidata": "Q1479375",
+              "operator:zh": "香港鐵路有限公司",
+              "operator:zh-Hans": "香港铁路有限公司",
+              "operator:zh-Hant": "香港鐵路有限公司",
+              "owner": "九廣鐵路公司 Kowloon-Canton Railway Corporation",
+              "owner:en": "Kowloon-Canton Railway Corporation",
+              "owner:wikidata": "Q838436",
+              "owner:zh": "九廣鐵路公司",
+              "ownership": "public",
+              "platforms": "4",
+              "public_transport": "station",
+              "railway": "station",
+              "ref": "TAW",
+              "start_date": "1986-04-23",
+              "station": "subway",
+              "subway": "yes",
+              "wheelchair": "yes",
+              "wikidata": "Q15244",
+              "wikipedia": "zh:大圍站"
+            }
+          },
+          {
+            "center_x": 511212.6662000005,
+            "center_y": 40886.70569999984,
+            "min_x": 511202.6662000005,
+            "max_x": 511222.6662000005,
+            "min_y": 40876.70569999984,
+            "max_y": 40896.70569999984,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "brand": "港鐵 MTR",
+              "brand:en": "MTR",
+              "brand:zh": "港鐵",
+              "building": "train_station",
+              "layer": "1",
+              "mall": "separate",
+              "name": "荃灣西 Tsuen Wan West",
+              "name:en": "Tsuen Wan West",
+              "name:zh": "荃灣西",
+              "network": "港鐵 MTR",
+              "network:en": "MTR",
+              "network:wikidata": "Q14751",
+              "network:zh": "港鐵",
+              "network:zh-Hans": "港铁",
+              "network:zh-Hant": "港鐵",
+              "operator": "香港鐵路有限公司 MTR Corporation",
+              "operator:en": "MTR Corporation",
+              "operator:type": "private",
+              "operator:wikidata": "Q1479375",
+              "operator:zh": "香港鐵路有限公司",
+              "operator:zh-Hans": "香港铁路有限公司",
+              "operator:zh-Hant": "香港鐵路有限公司",
+              "owner": "九廣鐵路公司 Kowloon-Canton Railway Corporation",
+              "owner:en": "Kowloon-Canton Railway Corporation",
+              "owner:wikidata": "Q838436",
+              "owner:zh": "九廣鐵路公司",
+              "ownership": "public",
+              "park_ride": "yes",
+              "public_transport": "station",
+              "railway": "station",
+              "ref": "TWW",
+              "station": "subway",
+              "subway": "yes",
+              "toilets": "yes",
+              "wikidata": "Q841883"
+            }
+          },
+          {
+            "center_x": 512239.02080000064,
+            "center_y": 41439.607800000056,
+            "min_x": 512229.02080000064,
+            "max_x": 512249.02080000064,
+            "min_y": 41429.607800000056,
+            "max_y": 41449.607800000056,
+            "width": 20,
+            "height": 20,
+            "tags": {
+              "abutters": "retail",
+              "addr:housename": "綠楊新邨 Luk Yeung Sun Chuen",
+              "addr:housename:en": "Luk Yeung Sun Chuen",
+              "addr:housename:zh": "綠楊新邨",
+              "addr:housenumber": "22-66",
+              "addr:street": "蕙荃路 Wai Tsuen Road",
+              "addr:street:en": "Wai Tsuen Road",
+              "addr:street:zh": "蕙荃路",
+              "apartments": "detached",
+              "building": "roof",
+              "building:function": "podium",
+              "building:levels": "2",
+              "building:min_level": "2",
+              "commercial": "yes",
+              "depot": "subway",
+              "landuse": "residential",
+              "mall": "separate",
+              "name": "綠楊新邨 Luk Yeung Sun Chuen",
+              "name:en": "Luk Yeung Sun Chuen",
+              "name:zh": "綠楊新邨",
+              "name:zh-Hans": "绿杨新邨",
+              "name:zh-Hant": "綠楊新邨",
+              "residence": "estate",
+              "residential": "apartments",
+              "retail": "yes",
+              "wikidata": "Q6701570",
+              "wikimedia_commons": "Category:Luk Yeung Sun Chuen",
+              "wikipedia": "zh:綠楊新邨"
+            }
+          },
+          {
+            "center_x": 512367.3367999999,
+            "center_y": 41478.857400000095,
+            "min_x": 512354.8367999999,
+            "max_x": 512379.8367999999,
+            "min_y": 41463.857400000095,
+            "max_y": 41493.857400000095,
+            "width": 25,
+            "height": 30,
+            "tags": {
+              "addr:housename": "綠楊新邨 Luk Yeung Sun Chuen",
+              "addr:housename:en": "Luk Yeung Sun Chuen",
+              "addr:housename:zh": "綠楊新邨",
+              "addr:housenumber": "22-66",
+              "addr:street": "蕙荃路 Wai Tsuen Road",
+              "addr:street:en": "Wai Tsuen Road",
+              "addr:street:zh": "蕙荃路",
+              "addr:unit": "E",
+              "apartments": "detached",
+              "building": "apartments",
+              "building:levels": "33",
+              "building:min_level": "2",
+              "location": "podium",
+              "name": "E座 Block E",
+              "name:en": "Block E",
+              "name:zh": "E座",
+              "nohousenumber": "shared",
+              "residential": "estate",
+              "roof:shape": "flat"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

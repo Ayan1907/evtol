@@ -165,7 +165,6 @@ class PathEvaluator:
         
         self.avg_speed = 50.0  # m/s
         
-        # V7新增: 目标值范围记录
         self.objective_ranges = {
             'energy': {'min': float('inf'), 'max': 0},
             'time': {'min': float('inf'), 'max': 0},

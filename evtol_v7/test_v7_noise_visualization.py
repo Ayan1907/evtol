@@ -46,7 +46,7 @@ def load_environment_and_path():
     
     if not use_v7:
         # 回退到V6结果
-        result_file = os.path.join(project_root, 'evtol_v6_results/v6_main_result.json')
+        result_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'v6_main_result.json')
         print("  使用V6路径结果进行噪声可视化演示")
     
     try:

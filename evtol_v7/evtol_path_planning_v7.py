@@ -82,25 +82,31 @@ class FlightProfile:
         return 'cruise'
     
     def get_allowed_height_range(self, current_pos, start_pos, goal_pos):
+        """
+        获取允许高度范围 - 基于GB 38031-2022限制面约束
+
+        修复V7保真度回退:
+        - 恢复 OFV 无障碍空间下限 max(ofv_height, ...)，防止贴地飞行
+        - 爬升/进近阶段下限按进度插值逐步逼近巡航层，隐式表达爬升梯度
+        - 上限取巡航层顶 (cruise_max) 作为硬天花板
+
+        注: 若强行施加限制面坡度上限 (start_z + dist*slope)，在起点已处于
+            80m、巡航层 120-180m 的离散城市场景下会使搜索空间过窄而无解，
+            故采用"进度插值下限"在可行性与剖面合理性之间取得平衡。
+        """
         phase = self.get_flight_phase(current_pos, start_pos, goal_pos)
         if phase == 'climb':
             dist = math.sqrt((current_pos[0]-start_pos[0])**2 + (current_pos[1]-start_pos[1])**2)
-            # 爬升阶段后期逐渐要求达到巡航高度
             progress = min(dist / self.climb_distance_threshold, 1.0)
-            # 最小高度：从起点爬升到巡航层
-            min_h = start_pos[2] + progress * (self.cruise_min - start_pos[2])
-            # 最大高度：巡航层上限
-            max_h = self.cruise_max
-            return (min_h, max_h)
+            # 下限: 从起点高度按进度爬升至巡航下限，且不低于OFV无障碍高度
+            min_h = max(self.ofv_height, start_pos[2] + progress * (self.cruise_min - start_pos[2]))
+            return (min_h, self.cruise_max)
         elif phase == 'approach':
             dist = math.sqrt((current_pos[0]-goal_pos[0])**2 + (current_pos[1]-goal_pos[1])**2)
-            # 下降阶段后期逐渐要求达到巡航高度
             progress = min(dist / self.approach_distance_threshold, 1.0)
-            # 最小高度：从终点进近到巡航层
-            min_h = goal_pos[2] + progress * (self.cruise_min - goal_pos[2])
-            # 最大高度：巡航层上限
-            max_h = self.cruise_max
-            return (min_h, max_h)
+            # 下限: 从终点高度按进度进近至巡航下限，且不低于OFV无障碍高度
+            min_h = max(self.ofv_height, goal_pos[2] + progress * (self.cruise_min - goal_pos[2]))
+            return (min_h, self.cruise_max)
         return (self.cruise_min, self.cruise_max)
     
     def check_height_constraint(self, current_pos, start_pos, goal_pos):
@@ -147,6 +153,14 @@ class PathEvaluator:
         # 安全模型
         from collision_risk_model import CollisionRiskModel
         self.collision_model = CollisionRiskModel()
+
+        # 地面风险模型 (V7新增: 替代_safety中的临时启发式公式)
+        try:
+            from ground_risk_model import GroundRiskModel
+            self.ground_model = GroundRiskModel(env)
+        except Exception as e:
+            print(f"  [警告] 地面风险模型加载失败, 回退启发式: {e}")
+            self.ground_model = None
         
         self.avg_speed = 50.0  # m/s
         
@@ -298,17 +312,27 @@ class PathEvaluator:
             return max(0.2, 1.0 - (avg_height - 50) / 200)
     
     def _evaluate_safety(self, path_coords: List) -> float:
-        """评估综合安全风险"""
+        """评估综合安全风险 (空中碰撞风险 + 地面人口暴露风险)"""
         try:
+            # 1. 空中碰撞风险 (取路径上最大值)
             collision_risk = 0.0
-            ground_risk = 0.0
-            
             for p in path_coords:
                 c = self.collision_model.calculate_collision_risk(p, p, speed=20.0)
                 collision_risk = max(collision_risk, c)
+
+            # 2. 地面风险 (逐段累积，使用GroundRiskModel替代临时公式)
+            ground_risk = 0.0
+            if getattr(self, 'ground_model', None) is not None:
+                for i in range(len(path_coords) - 1):
+                    g = self.ground_model.calculate_ground_risk(
+                        path_coords[i], path_coords[i + 1]
+                    )
+                    ground_risk = max(ground_risk, g)
+            else:
+                # 回退: 基于最低高度启发式
                 min_height = min(p[2] for p in path_coords)
                 ground_risk = max(0.01, 0.2 - min_height / 500)
-            
+
             return collision_risk * 0.6 + ground_risk * 0.4
         except Exception:
             avg_height = np.mean([p[2] for p in path_coords])
@@ -859,7 +883,16 @@ class EVTOLV7:
         energy_samples = np.array(energy_samples)
         time_samples = np.array(time_samples)
         noise_samples = np.array(noise_samples)
-        
+
+        # 防御: 若所有采样规划失败, 避免对空数组做归约而崩溃
+        if len(energy_samples) == 0:
+            print("  [警告] 蒙特卡洛采样未获得有效路径(全部规划失败)")
+            return {
+                'n_samples': n_samples,
+                'n_successful': 0,
+                'error': '所有采样规划失败, 无有效能耗样本',
+            }
+
         results = {
             'n_samples': n_samples,
             'n_successful': len(energy_samples),
@@ -893,7 +926,59 @@ class EVTOLV7:
             'energy_coefficient_variation': float(np.std(energy_samples) / np.mean(energy_samples)) if np.mean(energy_samples) > 0 else 0,
             'time_coefficient_variation': float(np.std(time_samples) / np.mean(time_samples)) if np.mean(time_samples) > 0 else 0,
         }
-        
+
+        # =====================================================================
+        # V7新增: 接入 MonteCarloUncertaintyAnalyzer 的拉丁超立方(LHS)不确定性传播
+        # 上面的循环是"扰动风场+重规划"的经验采样; 此处对基线路径做严格的
+        # LHS 多源不确定性传播(风/电池/动力/定位), 补足鲁棒性评估的严谨性。
+        # =====================================================================
+        try:
+            baseline_path = self._base_planner.find_path()
+            baseline_coords = self.evaluator._to_coords(baseline_path) if baseline_path else []
+            if len(baseline_coords) >= 2:
+                baseline_energy = (
+                    float(np.mean(energy_samples))
+                    if len(energy_samples) > 0
+                    else self.evaluator._calculate_energy(baseline_coords)
+                )
+                mc_config = UncertaintyConfig(
+                    n_samples=max(100, n_samples),
+                    sampling_method='lhs',
+                    failure_threshold=0.05,
+                    enable_wind=include_wind,
+                    enable_battery=include_mass,
+                    enable_power=True,
+                    enable_localization=True,
+                    random_seed=42,
+                )
+                mc_analyzer = MonteCarloUncertaintyAnalyzer(
+                    self.evaluator.energy_model, mc_config
+                )
+                mc_result = mc_analyzer.run_analysis(
+                    baseline_coords, baseline_energy, self.dynamic_env.wind_field
+                )
+                results['monte_carlo_lhs'] = {
+                    'method': 'lhs',
+                    'n_samples': mc_config.n_samples,
+                    'baseline_energy': baseline_energy,
+                    'energy_mean': mc_result.energy_mean,
+                    'energy_std': mc_result.energy_std,
+                    'energy_p5': mc_result.energy_p5,
+                    'energy_p95': mc_result.energy_p95,
+                    'failure_probability': mc_result.failure_probability,
+                    'energy_exceedance_prob': mc_result.energy_exceedance_prob,
+                    'robustness_index': mc_result.robustness_index,
+                    'cvar': mc_result.conditional_value_at_risk,
+                    'sensitivity_to_wind': mc_result.sensitivity_to_wind,
+                    'sensitivity_to_battery': mc_result.sensitivity_to_battery,
+                    'sensitivity_to_power': mc_result.sensitivity_to_power,
+                }
+                print(f"  [LHS] 失败概率={mc_result.failure_probability:.2%}, "
+                      f"鲁棒性指数={mc_result.robustness_index:.3f}, "
+                      f"能耗均值={mc_result.energy_mean:.3f}kWh")
+        except Exception as e:
+            print(f"  [警告] LHS不确定性传播失败: {e}")
+
         return results
     
     def get_full_analysis(self, n_samples: int = 500, 

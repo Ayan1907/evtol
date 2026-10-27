@@ -471,7 +471,14 @@ class NSGAIIOptimizer:
         
         # 初始化种群
         if initial_population:
-            self.population = initial_population
+            self.population = list(initial_population)
+            # 【修复】注入的初始种群若不足 population_size，必须用随机个体补齐，
+            # 否则主循环按 population_size 索引会越界 (IndexError)。
+            # 注入的只是种子路径，补齐的随机个体承担多样性。
+            if len(self.population) < self.population_size:
+                extra = self._initialize_population()
+                need = self.population_size - len(self.population)
+                self.population.extend(extra[:need])
         else:
             self.population = self._initialize_population()
         
@@ -1733,7 +1740,14 @@ class MOEADOptimizer:
         
         # 初始化种群
         if initial_population:
-            self.population = initial_population
+            self.population = list(initial_population)
+            # 【修复】注入的初始种群若不足 population_size，必须用随机个体补齐，
+            # 否则主循环按 population_size 索引会越界 (IndexError)。
+            # 注入的只是种子路径，补齐的随机个体承担多样性。
+            if len(self.population) < self.population_size:
+                extra = self._initialize_population()
+                need = self.population_size - len(self.population)
+                self.population.extend(extra[:need])
         else:
             self.population = self._initialize_population()
         

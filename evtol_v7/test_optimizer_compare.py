@@ -40,9 +40,9 @@ def build_planner():
     print("=" * 60)
     print("【对比实验】构建问题实例（两种算法共用）")
     print("=" * 60)
-    map_file = os.path.join(_ROOT, 'test_map_standard.json')
+    map_file = os.path.join(_ROOT, 'data', 'test_maps', 'test_map_standard.json')
     if not os.path.exists(map_file):
-        map_file = os.path.join(_ROOT, 'test_map_v3_compatible.json')
+        map_file = os.path.join(_ROOT, 'data', 'test_maps', 'test_map_v3_compatible.json')
     print(f"  加载地图: {os.path.basename(map_file)}")
     env, start_coords, goal_coords, _ = load_environment_from_json(map_file)
 

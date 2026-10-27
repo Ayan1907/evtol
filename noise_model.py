@@ -144,7 +144,7 @@ class NoiseModel:
         else:
             ground_reflection = -1.0
         
-        # 4. 建筑物遮挡修正（简化）
+        # 4. 建筑物遮挡修正
         # 如果下方有建筑物，声级衰减
         occlusion_loss = self._calculate_occlusion_loss(x, y, altitude)
         

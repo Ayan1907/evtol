@@ -1,0 +1,40 @@
+{
+  "config": {
+    "n_generations": 30,
+    "population_size": 30,
+    "budget_evals": 930
+  },
+  "algorithms": {
+    "nsga2": {
+      "time_s": 30.867,
+      "n_pareto": 17,
+      "hv_common_ref": 304198.5449114659,
+      "obj_best": [
+        2.1327,
+        56.6768,
+        77.5311,
+        0.01,
+        2833.8422
+      ]
+    },
+    "moead": {
+      "time_s": 29.309,
+      "n_pareto": 7,
+      "hv_common_ref": 249716.8792158283,
+      "obj_best": [
+        4.8888,
+        56.7345,
+        77.7247,
+        0.0101,
+        2836.7226
+      ]
+    }
+  },
+  "reference_point": [
+    83.3419,
+    68.2286,
+    96.5512,
+    0.0401,
+    3411.4294
+  ]
+}

@@ -145,7 +145,7 @@ class PathEvaluator:
                  wind_field=None):
         self.env = env
         self.energy_model = energy_model or create_energy_model('EH216-S')
-        self.wind_field = wind_field  # V7修复：保存风场引用
+        self.wind_field = wind_field 
         
         # 噪声模型
         from noise_model import NoiseModel
@@ -155,7 +155,7 @@ class PathEvaluator:
         from collision_risk_model import CollisionRiskModel
         self.collision_model = CollisionRiskModel()
 
-        # 地面风险模型 (V7新增: 替代_safety中的临时启发式公式)
+        # 地面风险模型
         try:
             from ground_risk_model import GroundRiskModel
             self.ground_model = GroundRiskModel(env)
@@ -604,6 +604,7 @@ class MultiObjectiveOptimizerV7:
                 n_objectives=5,
                 population_size=population_size,
                 n_generations=n_generations,
+                neighborhood_size=max(2, min(20, population_size // 2)),
                 random_seed=42
             )
             moead.set_objectives(self.objectives)

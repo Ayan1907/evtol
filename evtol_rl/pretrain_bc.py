@@ -37,11 +37,21 @@ def make_env(cfg: EnvConfig):
         wind_direction=cfg.wind_direction, turbulence=cfg.turbulence,
         shield=cfg.shield, blocked_penalty=cfg.blocked_penalty,
         start_altitude=cfg.start_altitude, seed=0,
+        scenario_jitter_m=getattr(cfg, "scenario_jitter_m", 0.0),
+        randomize_wind=getattr(cfg, "randomize_wind", False),
+        wind_speed_range=getattr(cfg, "wind_speed_range", (3.0, 7.0)),
     )
 
 
 def heuristic(env, cruise_alt, descend_at):
-    """带感知的合法航线专家：先保证在允许带内（硬合规），再考虑爬升/下降/前进。"""
+    """带感知 + 壁障感知的合法航线专家（v3，场景随机化配套）。
+
+    v2（band-aware）在固定场景硬口径 100%，但起终点随机化后直航线可能撞进楼群：
+    盲推被 shield 阻挡后 obs 不变、argmax 不变 → 永久卡死（实测随机场景仅 23/30）。
+    v3 = v2 优先级不变；首选动作的路段被建筑阻挡时，退化为在全部未阻挡动作中
+    选"水平方向与目标方向余弦最大"者（贪心绕障，平层优先——升降由带规则专职）。
+    阻挡判定与 env.step 完全同源：city.segment_blocked(pos, pos+dir·stride, check_step)。
+    """
     up = int(np.where((env._DIRS == np.array([0, 0, 1])).all(axis=1))[0][0])
     down = int(np.where((env._DIRS == np.array([0, 0, -1])).all(axis=1))[0][0])
     lo, hi = env.allowed_height_range(env.pos)
@@ -49,17 +59,38 @@ def heuristic(env, cruise_alt, descend_at):
     hd = float(np.hypot(env.goal[0] - env.pos[0], env.goal[1] - env.pos[1]))
     # 1) 带感知（优先级最高）：低于带下限+5m 爬升，贴上限−5m 下降
     if z < lo + 5.0:
-        return up
-    if z > hi - 5.0:
-        return down
+        pref = up
+    elif z > hi - 5.0:
+        pref = down
     # 2) 任务逻辑：爬升到巡航高度 / 进近下降
-    if z < cruise_alt and hd > descend_at:
-        return up
-    if hd < descend_at and z > cruise_alt - 25:
-        return down
+    elif z < cruise_alt and hd > descend_at:
+        pref = up
+    elif hd < descend_at and z > cruise_alt - 25:
+        pref = down
     # 3) 前进
-    d = np.array([env.goal[0] - env.pos[0], env.goal[1] - env.pos[1], 0.0])
-    return int(np.argmax(env._DIRS_UNIT @ (d / (np.linalg.norm(d) + 1e-9))))
+    else:
+        d = np.array([env.goal[0] - env.pos[0], env.goal[1] - env.pos[1], 0.0])
+        pref = int(np.argmax(env._DIRS_UNIT @ (d / (np.linalg.norm(d) + 1e-9))))
+
+    pos = np.asarray(env.pos, dtype=np.float64)
+    pref_to = pos + env._DIRS_UNIT[pref] * env.stride
+    if not env.city.segment_blocked(pos, pref_to, step=env.check_step):
+        return pref
+
+    # 4) 贪心绕障：全部未阻挡动作中，水平方向最对准目标者；平层优先（|vz| 轻罚）
+    d3 = np.asarray(env.goal, dtype=np.float64) - pos
+    dh = d3[:2] / (np.linalg.norm(d3[:2]) + 1e-9)
+    best, best_score = pref, -1e9
+    for a in range(env.N_ACTIONS):
+        nxt = pos + env._DIRS_UNIT[a] * env.stride
+        if env.city.segment_blocked(pos, nxt, step=env.check_step):
+            continue
+        u = env._DIRS_UNIT[a]
+        uh = u[:2] / (np.linalg.norm(u[:2]) + 1e-9)
+        score = float(uh @ dh) - 0.3 * abs(float(u[2]))
+        if score > best_score:
+            best_score, best = score, a
+    return int(best)
 
 
 def main():

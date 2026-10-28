@@ -103,22 +103,34 @@ def main():
     ap.add_argument("--init-episodes", type=int, default=250, help="初始 BC 数据集规模")
     ap.add_argument("--dataset-in", default=None,
                     help="从 .npz 载入已积累数据集继续迭代（跳过启发式自展）")
+    ap.add_argument("--randomize", action="store_true",
+                    help="场景随机化：每集重采样起终点（±jitter）与风场——"
+                         "训练/评估/采集全部按随机场景，产出分布鲁棒策略")
+    ap.add_argument("--jitter", type=float, default=400.0, help="起终点水平扰动半径 m")
     ap.add_argument("--bc-epochs", type=int, default=8)
     ap.add_argument("--save-path", default="ppo_dagger.zip")
     ap.add_argument("--dataset-out", default=None, help="数据集落盘 .npz")
+    ap.add_argument("--seed", type=int, default=0, help="rng/BC 种子——换种子产生新采集轨迹")
     args = ap.parse_args()
 
     from stable_baselines3 import PPO
 
     cfg = EnvConfig()
     cfg.height_hard_limit = float("inf")   # 采集/训练用软罚；违规不致死，专家标签可覆盖违规状态
+    if args.randomize:
+        cfg.scenario_jitter_m = args.jitter
+        cfg.randomize_wind = True
     env = make_env(cfg)
     # 验收口径评估环境：硬终止（超带 >10m 即死）。最优模型按此口径选择——
-    # 软口径下 50% 到达的策略，硬口径只有 ~25%（越带被软罚救回 ≠ 验收能过）
+    # 软口径下 50% 到达的策略，硬口径只有 ~25%（越带被软罚救回 ≠ 验收能过）。
+    # 评估环境与采集环境共享同一随机化配置 → 轮内选优即分布意义选优。
     eval_cfg = EnvConfig()
     eval_cfg.height_hard_limit = 10.0
+    if args.randomize:
+        eval_cfg.scenario_jitter_m = args.jitter
+        eval_cfg.randomize_wind = True
     eval_env = make_env(eval_cfg)
-    rng = np.random.default_rng(0)
+    rng = np.random.default_rng(args.seed)
 
     # ---- 数据集：--dataset-in 续训（不浪费已积累的专家标注）或启发式自展 ----
     X, Y = [], []
@@ -147,7 +159,7 @@ def main():
 
     best_sr, best_path = -1.0, None
     for rd in range(1, args.rounds + 1):
-        model, loss = train_bc(X, Y, env, epochs=args.bc_epochs)
+        model, loss = train_bc(X, Y, env, epochs=args.bc_epochs, seed=args.seed * 100 + rd)
         res, avg_e = evaluate(model, eval_env)
         sr = res.get("arrived", 0) / 20
         print(f"[round {rd}] 数据 {len(X)} | BC loss {loss:.4f} | 硬口径评估 {res} | 到达率 {sr:.0%}", flush=True)

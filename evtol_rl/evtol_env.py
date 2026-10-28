@@ -406,6 +406,9 @@ class EVTOLEnv(gym.Env):
         wind_speed: float = 5.0,
         wind_direction: float = 315.0,
         turbulence: float = 0.1,
+        scenario_jitter_m: float = 0.0,
+        randomize_wind: bool = False,
+        wind_speed_range: Tuple[float, float] = (3.0, 7.0),
         seed: Optional[int] = None,
         map_root: Optional[str] = None,
         verbose: bool = False,
@@ -438,6 +441,14 @@ class EVTOLEnv(gym.Env):
         if start_altitude is not None:
             self.start[2] = float(start_altitude)   # 课程学习：抬高起点（爬升段剖面自动适配）
         self.goal = np.array(self.city.goal, dtype=np.float64)
+
+        # ---------------- 场景随机化（默认关闭 → 行为与旧版逐字节一致）----------------
+        #   打开后 reset() 每 episode 重采样起终点与风场，见 _resample_scenario()。
+        self.scenario_jitter_m = float(scenario_jitter_m)
+        self.randomize_wind = bool(randomize_wind)
+        self.wind_speed_range = (float(wind_speed_range[0]), float(wind_speed_range[1]))
+        self.map_start = self.start.copy()   # 扰动围绕地图原值采样，不逐集叠加
+        self.map_goal = self.goal.copy()
 
         # ---------------- 奖励函数参数（v1 设计，2026-10-27）----------------
         self.r_arrive = float(r_arrive)
@@ -473,19 +484,10 @@ class EVTOLEnv(gym.Env):
 
         self.wind_field = None
         self.wind_error = _wind_import_error
-        if use_wind and _WIND_FIELD_CLS is not None:
-            try:
-                # 原 WindField 的构造签名: (env, base_wind_speed, base_wind_direction,
-                #                           turbulence_intensity, time_variation)
-                self.wind_field = _WIND_FIELD_CLS(
-                    env=self.city,
-                    base_wind_speed=wind_speed,
-                    base_wind_direction=wind_direction,
-                    turbulence_intensity=turbulence,
-                )
-            except Exception as exc:  # noqa: BLE001
-                self.wind_error = f"{type(exc).__name__}: {exc}"
-                self.wind_field = None
+        self.use_wind_enabled = bool(use_wind)
+        self._turbulence = float(turbulence)
+        if self.use_wind_enabled:
+            self._build_wind_field(float(wind_speed), float(wind_direction))
 
         # ---------------- 国标飞行剖面（高度约束）----------------
         #   复用原项目 FlightProfile：爬升 / 巡航(120–180 m) / 进近三段剖面。
@@ -794,9 +796,65 @@ class EVTOLEnv(gym.Env):
     # ===================================================================
     # Gym 接口
     # ===================================================================
+    def _build_wind_field(self, speed: float, direction: float) -> None:
+        """（重）建风场——__init__ 与场景随机化 reset 共用。构造只存参数，重建零成本。"""
+        self.wind_field = None
+        self.wind_error = _wind_import_error
+        if not self.use_wind_enabled or _WIND_FIELD_CLS is None:
+            return
+        try:
+            # 原 WindField 的构造签名: (env, base_wind_speed, base_wind_direction,
+            #                           turbulence_intensity, time_variation)
+            self.wind_field = _WIND_FIELD_CLS(
+                env=self.city,
+                base_wind_speed=speed,
+                base_wind_direction=direction,
+                turbulence_intensity=self._turbulence,
+            )
+        except Exception as exc:  # noqa: BLE001
+            self.wind_error = f"{type(exc).__name__}: {exc}"
+            self.wind_field = None
+
+    def _sample_free_point(self, base: np.ndarray) -> np.ndarray:
+        """在 base 水平 ±jitter 内均匀采样一个自由空间点（只动 x/y，z 保持配置值）。
+
+        越界则裁回地图内（留 stride 边距）；落在建筑内则重采样，至多 100 次，
+        全部失败退回原值（极端情况不阻塞训练）。
+        """
+        j = self.scenario_jitter_m
+        m = self.stride
+        for _ in range(100):
+            x = float(base[0] + self.np_random.uniform(-j, j))
+            y = float(base[1] + self.np_random.uniform(-j, j))
+            x = min(max(x, m), self.size_x - m)
+            y = min(max(y, m), self.size_y - m)
+            if not self.city.is_blocked(x, y, float(base[2])):
+                return np.array([x, y, float(base[2])], dtype=np.float64)
+        return base.copy()
+
+    def _resample_scenario(self) -> None:
+        """场景随机化：起点/终点水平扰动 + 风场重采样（在 super().reset(seed) 之后
+        调用，采样用已被 seed 注入的 self.np_random → 同 seed 可复现）。
+
+        jitter=0 且 wind 固定时为 no-op；否则重算 PBRS 基准 d_init
+        （Φ(s)=−K·d/d₀ 依赖初始距离）。终点高度保持地图值（进近剖面自动适配）。
+        """
+        if self.scenario_jitter_m > 0:
+            self.start = self._sample_free_point(self.map_start)
+            self.goal = self._sample_free_point(self.map_goal)
+            self.d_init = max(float(np.linalg.norm(self.goal - self.start)), 1e-6)
+        if self.randomize_wind:
+            lo, hi = self.wind_speed_range
+            self._build_wind_field(
+                speed=float(self.np_random.uniform(lo, hi)),
+                direction=float(self.np_random.uniform(0.0, 360.0)),
+            )
+
     def reset(self, seed: Optional[int] = None, options: Optional[Dict] = None):
         if seed is not None and HAS_GYMNASIUM:
             super().reset(seed=seed)
+
+        self._resample_scenario()
 
         self.pos = self.start.copy()
         self.prev_pos = self.start.copy()
@@ -811,6 +869,16 @@ class EVTOLEnv(gym.Env):
             "step": self.steps,
             "height_violation_m": 0.0,
         }
+        if self.scenario_jitter_m > 0 or self.randomize_wind:
+            wind = None
+            if self.wind_field is not None:
+                wind = {"speed_mps": self.wind_field.base_wind_speed,
+                        "direction_deg": self.wind_field.base_wind_direction}
+            info["scenario"] = {
+                "start": self.start.tolist(),
+                "goal": self.goal.tolist(),
+                "wind": wind,
+            }
         if self.flight_profile is not None:
             lo_h, hi_h = self.allowed_height_range()
             info["height_min"] = lo_h

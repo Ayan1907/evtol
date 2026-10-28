@@ -35,6 +35,10 @@ def main():
                     help="确定性评估（部署口径）。配合 stuck 检测：连续 30 步被 shield 阻挡"
                          "判 stuck（确定性策略对相同 obs 永远输出同一动作，无检测会磨到超时）")
     ap.add_argument("--stuck-steps", type=int, default=30)
+    ap.add_argument("--randomize", action="store_true",
+                    help="场景随机化：每集重采样起点/终点（±jitter 水平扰动）与风场——"
+                         "分布意义的成功率（固定场景下成功率只是采样鲁棒性）")
+    ap.add_argument("--jitter", type=float, default=400.0, help="起终点水平扰动半径 m")
     args = ap.parse_args()
 
     from stable_baselines3 import PPO
@@ -47,6 +51,9 @@ def main():
         cfg.height_hard_limit = float("inf")
     else:
         cfg.height_hard_limit = args.hard_limit  # 硬口径：违规 > 阈值即终止
+    if args.randomize:
+        cfg.scenario_jitter_m = args.jitter
+        cfg.randomize_wind = True
     env = make_env(cfg)
 
     res = {}
@@ -54,7 +61,8 @@ def main():
     soft_max_viol = []          # 软口径下每集最大越带深度（硬口径折算用）
     outcomes = []               # 每集结局 reason（硬口径折算用）
     for ep in range(args.episodes):
-        obs, _ = env.reset(seed=args.seed0 + ep)
+        obs, info0 = env.reset(seed=args.seed0 + ep)
+        wind0 = (info0.get("scenario") or {}).get("wind") if args.randomize else None
         e = 0.0
         max_viol = 0.0
         stuck_run = 0
@@ -65,24 +73,30 @@ def main():
             max_viol = max(max_viol, float(info.get("height_violation_m", 0.0)))
             # shield 阻挡 = 本步原地不动；确定性策略会无限重复同一动作
             stuck_run = stuck_run + 1 if info.get("collided") else 0
-            if stuck_run >= args.stuck_steps:
-                k, term = "stuck", True
-            if term or trunc:
+            if stuck_run >= args.stuck_steps and not (term or trunc):
+                k = "stuck"          # 环境未判终：策略卡死，主动截断（不可让下面的分支覆盖）
+            elif term or trunc:
                 k = info.get("reason", "?")
-                res[k] = res.get(k, 0) + 1
-                energies.append(e / 3.6e6)
-                steps.append(info["step"])
-                soft_max_viol.append(max_viol)
-                outcomes.append(k)
-                print(f"  ep{ep:3d}: {k:16s} {info['step']:3d}步 "
-                      f"剩余{info['distance']:7.1f}m 能耗{e / 3.6e6:.3f}kWh "
-                      f"最大越带{max_viol:5.1f}m", flush=True)
-                break
+            else:
+                continue
+            res[k] = res.get(k, 0) + 1
+            energies.append(e / 3.6e6)
+            steps.append(info["step"])
+            soft_max_viol.append(max_viol)
+            outcomes.append(k)
+            print(f"  ep{ep:3d}: {k:16s} {info['step']:3d}步 "
+                  f"剩余{info['distance']:7.1f}m 能耗{e / 3.6e6:.3f}kWh "
+                  f"最大越带{max_viol:5.1f}m"
+                  + (f" 风{wind0['speed_mps']:.1f}m/s@{wind0['direction_deg']:.0f}°"
+                     if wind0 else ""), flush=True)
+            break
 
     n = args.episodes
     print("=" * 56)
     tag = f"软罚口径（hard_limit=inf, stochastic, {n} 集, seed0={args.seed0}）" if args.soft \
         else f"硬口径评估（hard_limit={args.hard_limit}m, stochastic, {n} 集, seed0={args.seed0}）"
+    if args.randomize:
+        tag += f" [场景随机化 jitter=±{args.jitter:.0f}m + 随机风]"
     print(tag)
     for k, v in sorted(res.items(), key=lambda kv: -kv[1]):
         print(f"  {k:18s}: {v:3d} ({v / n:.0%})")

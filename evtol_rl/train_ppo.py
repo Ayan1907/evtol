@@ -61,6 +61,9 @@ def make_env(cfg: EnvConfig, seed: int = 0):
             start_altitude=cfg.start_altitude,
             shield=cfg.shield,
             blocked_penalty=cfg.blocked_penalty,
+            scenario_jitter_m=cfg.scenario_jitter_m,
+            randomize_wind=cfg.randomize_wind,
+            wind_speed_range=cfg.wind_speed_range,
             seed=seed,
         )
     return _thunk

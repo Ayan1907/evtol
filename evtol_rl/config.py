@@ -20,6 +20,15 @@ class EnvConfig:
     shield: bool = True                   # 动作屏蔽（离散 shield）：碰撞→原地阻挡+小罚，训练期零死亡
     blocked_penalty: float = -0.5         # 被阻挡一步的惩罚（介于步惩罚与终端之间）
 
+    # ---------- 场景随机化（2026-10-28：分布意义成功率的前置）----------
+    #   固定场景下"成功率"只是采样鲁棒性（同模型评估逐字节一致，见 README 第十节）。
+    #   打开后 reset() 每 episode 重采样：起点/终点在地图原值 ±jitter 内均匀扰动
+    #   （只动水平坐标，须为自由空间），风场风速/方向重采样并重建。
+    #   默认关闭 → 与旧版行为逐字节一致，老模型/老脚本完全可复现。
+    scenario_jitter_m: float = 0.0        # 起终点水平扰动半径 m（0=固定场景）
+    randomize_wind: bool = False          # 每 episode 随机风场（速度/方向）
+    wind_speed_range: tuple = (3.0, 7.0)  # 随机风速范围 m/s（方向恒 U[0,360)）
+
     # ---------- 到达判定 ----------
     goal_radius_h: float = 50.0           # 水平到达半径（m）
     goal_radius_v: float = 50.0           # 高度到达容差（m）

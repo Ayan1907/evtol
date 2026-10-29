@@ -36,7 +36,7 @@ RNG，同模型评估逐字节一致，"成功率"=固定场景采样鲁棒性�
 
 ## 3. 协作守则（对齐用户既定偏好，务必遵守）
 
-> **完整版协作规范见仓库根目录 `AGENT-COLLABORATION.md`**（语言/进度条/先问后动/
+> **完整版协作规范见 skill 仓库 `SKILL4S-Personal/AGENT-COLLABORATION.md`**（与本仓库同级 clone；语言/进度条/先问后动/
 > 文件操作/配色/流程图/交付流程/技术约定全量版）。本节仅为其摘要，两者冲突时以
 > AGENT-COLLABORATION.md 为准。
 
